@@ -53,7 +53,7 @@ for (perc_index in c(1, 2, 3, 4, 5)) {
 
 # iterate over treatment groups
 for (sig in c("Nanog_Gata6", "Nanog_HA")) {
-  for (loc in c(1, 2, 3, 4, 5)) {
+  for (loc in c(1)) {
     # store location specific expression values for generating thresholds
     gfp_values <- list()
     rfp_values <- list()
@@ -65,8 +65,8 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
       dir_rfp <- paste0("normalized/", sig, "/concentration_0/")
       
       # get CSV file names
-      gfp_file <- paste0("Nanog_Gata6_25_", well, "_", loc, ".csv")
-      rfp_file <- paste0("Nanog_Gata6_0_", well, "_", loc, ".csv")
+      gfp_file <- paste0(sig, "_25_", well, "_", loc, ".csv")
+      rfp_file <- paste0(sig, "_0_", well, "_", loc, ".csv")
       
       # read the CSV to data frames
       gfp_df <- read.csv(paste0(dir_gfp, gfp_file))
@@ -77,7 +77,7 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
       rfp_values[[well]] <- rfp_df[, 7]
     }
     
-    for (perc_index in c(1, 2, 3, 4, 5)) {
+    for (perc_index in c(1)) {
       # get the percentile value
       perc <- percentiles[[perc_index]]
       
@@ -85,11 +85,11 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
       gfp_threshold <- gen_threshold(perc, gfp_values)
       rfp_threshold <- gen_threshold(perc, rfp_values)
       
-      for (dox_index in c(1, 2, 3, 4)) {
+      for (dox_index in c(1)) {
         # get dox concentration value
         conc <- concentrations[[dox_index]]
           
-        for (well in c(1, 2, 3)) {
+        for (well in c(1)) {
           # get path to CSV file and file name
           csv_path <- paste0("normalized/", sig, "/concentration_", conc, "/")
           csv_name <- paste0(sig, "_", conc, "_", well, "_", loc, ".csv")
