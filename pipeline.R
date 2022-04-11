@@ -10,7 +10,7 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
     for (well in c(1, 2, 3)) {
       for (loc in c(1, 2, 3, 4, 5)) {
         # get path to microscopy CSV file
-        csv_path <- paste0("data/", signal, "/concentration_", conc, "/")
+        csv_path <- paste0("data/", sig, "/concentration_", conc, "/")
 
         # make new directory for storing normalized GFP/RFP values
         norm_path <- paste0("normalized/", signal, "/concentration_", conc, "/")
@@ -30,6 +30,8 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
 
 
 # --------------------- Reconstruct Microscopy Images -------------------------
+
+start <- Sys.time()
 
 # pull functions from functions.R scripts
 setwd("~/Documents/Research/TDA/R/TDA-Microscopy-Pipeline/")
@@ -53,7 +55,7 @@ for (perc_index in c(1, 2, 3, 4, 5)) {
 
 # iterate over treatment groups
 for (sig in c("Nanog_Gata6", "Nanog_HA")) {
-  for (loc in c(1)) {
+  for (loc in c(1, 2, 3, 4, 5)) {
     # store location specific expression values for generating thresholds
     gfp_values <- list()
     rfp_values <- list()
@@ -77,7 +79,7 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
       rfp_values[[well]] <- rfp_df[, 7]
     }
     
-    for (perc_index in c(1)) {
+    for (perc_index in c(1, 2, 3, 4, 5)) {
       # get the percentile value
       perc <- percentiles[[perc_index]]
       
@@ -85,11 +87,11 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
       gfp_threshold <- gen_threshold(perc, gfp_values)
       rfp_threshold <- gen_threshold(perc, rfp_values)
       
-      for (dox_index in c(1)) {
+      for (dox_index in c(1, 2, 3, 4)) {
         # get dox concentration value
         conc <- concentrations[[dox_index]]
           
-        for (well in c(1)) {
+        for (well in c(1, 2, 3)) {
           # get path to CSV file and file name
           csv_path <- paste0("normalized/", sig, "/concentration_", conc, "/")
           csv_name <- paste0(sig, "_", conc, "_", well, "_", loc, ".csv")
@@ -115,3 +117,6 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
     }
   }
 }
+
+end <- Sys.time()
+print(end - start)
