@@ -49,33 +49,53 @@ discretize <- function(df, gfp_thresh, rfp_thresh) {
 
 
 # used by mapply() in assign_color()
-colorscheme <- function(gfp, rfp) {
+colorscheme <- function(...) {
+  # get the variable number of discretized values as a list
+  discrete_values <- list(...)
+  
+  # get GFP/RFP values
+  gfp <- discrete_values[1]
+  rfp <- discrete_values[2]
+  
   # assign colors based on the discrete GFP and RFP values
-  if (rfp == 1) {
-    if (gfp == 1) {
-      # if both high, color white
+  if (gfp == 1) {
+    if (rfp == 1) {
       return("white")
-      
     } else {
-      # if RFP high and GFP low, color red
-      return("red")
+      return("green")
     }
   } else {
-    # otherwise green
-    return("green")
+    if (rfp == 1) {
+      return("red")
+    } else {
+      return("yellow")
+    }
   }
 }
 
 
 # used by mapply() in assign_color()
-alpha_values <- function(gfp, rfp) {
-  # if RFP and GFP are both low
-  if (gfp == 0 && rfp == 0) {
-    # set alpha to 0
-    return(0)
+alpha_values <- function(...) {
+  # get the variable number of discretized values as a list
+  discrete_values <- list(...)
+  
+  # get GFP/RFP values
+  gfp <- discrete_values[1]
+  rfp <- discrete_values[2]
+  
+  # assign alpha value based on the discrete GFP and RFP values
+  if (gfp == 1) {
+    if (rfp == 1) {
+      return(1)
+    } else {
+      return(1)
+    }
   } else {
-    # set alpha to max
-    return(1)
+    if (rfp == 1) {
+      return(1)
+    } else {
+      return(0)
+    }
   }
 }
 
@@ -84,7 +104,7 @@ assign_color <- function(df, show_double_low=TRUE) {
   # apply color scheme based on GFP and RFP values
   df$color <- mapply(colorscheme, df$gfp_discrete, df$rfp_discrete)
   
-  # if imaging double-low cells
+  # if imaging all cells
   if (show_double_low) {
     # set alpha value for transparency to max
     df$show <- 1

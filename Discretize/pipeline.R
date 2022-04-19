@@ -1,7 +1,7 @@
 
 # ------------------------- Normalize GFP/RFP Values --------------------------
 
-# set working directory to location of micrscopy CSVs
+# set working directory to location of microscopy CSVs
 setwd("~/Documents/Research/TDA/R/")
 
 # iterate over treatment groups
@@ -32,15 +32,15 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
 # --------------------- Reconstruct Microscopy Images -------------------------
 
 # pull functions from functions.R scripts
-setwd("~/Documents/Research/TDA/R/TDA-Microscopy-Pipeline/")
+setwd("~/Documents/Research/TDA/R/TDA-Microscopy-Pipeline/Discretize")
 source("functions.R")
 
-# set working directory to location of micrscopy CSVs
+# set working directory to location of microscopy CSVs
 setwd("~/Documents/Research/TDA/R/")
 
 # hold actual values for dox concentrations and threshold percentiles
-concentrations <- c(0, 5, 15, 25)
-percentiles <- c(75, 80, 85, 90, 95)
+dox <- c(0, 5, 15, 25)
+perc <- c(75, 80, 85, 90, 95)
 
 # store distributions of cell types in a 2D list of 2x2 matrices
 M <- list()
@@ -79,7 +79,7 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
     
     for (perc_index in c(1, 2, 3, 4, 5)) {
       # get the percentile value
-      perc <- percentiles[[perc_index]]
+      perc <- perc[[perc_index]]
       
       # generate thresholds based percentile
       gfp_threshold <- gen_threshold(perc, gfp_values)
@@ -87,8 +87,8 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
       
       for (dox_index in c(1, 2, 3, 4)) {
         # get dox concentration value
-        conc <- concentrations[[dox_index]]
-          
+        conc <- dox[[dox_index]]
+        
         for (well in c(1, 2, 3)) {
           # get path to CSV file and file name
           csv_path <- paste0("normalized/", sig, "/concentration_", conc, "/")
