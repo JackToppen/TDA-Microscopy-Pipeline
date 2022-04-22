@@ -12,7 +12,7 @@ from matplotlib import colors
 import sys 
 import random
 import math
-
+import os
 
 class Channel(object):
   def __init__(self,image,name):
@@ -67,9 +67,9 @@ class Image(object):
                 output_eccentricity[coord[0],coord[1]] = self.cytoprops[i]["eccentricity"]
       self.cell_count = len(cells)
       self.cytoprops = cells
-      self.plot(output_area,os.path.join(self.output_folder,"area.png"))
-      self.plot(output_perimeter,os.path.join(self.output_folder,"perimeter.png"))
-      self.plot(output_eccentricity,os.path.join(self.output_folder,"eccentricity.png"))
+      # self.plot(output_area,os.path.join(self.output_folder,"area.png"))
+      # self.plot(output_perimeter,os.path.join(self.output_folder,"perimeter.png"))
+      # self.plot(output_eccentricity,os.path.join(self.output_folder,"eccentricity.png"))
       self.df = pd.DataFrame({"X":self.X,"Y":self.Y,"area":area,"perimeter":perimeter,"eccentricity":eccentricity})
 
   def overlay_cells(self):
