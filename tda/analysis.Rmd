@@ -1,0 +1,343 @@
+---
+  title: "Analyze cell patterning data"
+  output:
+  html_document:
+  df_print: paged
+---
+Iryna Hartsock, Ashleigh Thomas, Alex Elchesen
+February 2022
+
+```{r global_options, echo=FALSE}
+knitr::opts_chunk$set(echo=FALSE)
+# could also use warning=FALSE, message=FALSE
+```
+```{r setup}
+knitr::opts_knit$set(root.dir="/Users/Iryna/Github/cell-patterning-project")
+```
+```{r libraries, message=FALSE}
+library(tictoc)
+#library(tdatools)
+library(ggplot2)
+source("./source/intro_tda.R")
+```
+
+
+```{r PCA for PLs with concentration 0 } 
+#####Gata6####################
+cells <- c("red", "green")
+for (i in 1:2){
+  data_labels <- c(rep(121,135))
+  pca <- prcomp(vec_sample_PLs[[i]][121:135,], rank=10)
+  pca_df <- as.data.frame(pca$x)
+  labels <- matrix(sprintf("%s cells Gata6 concentration =0 percentile 75", cells[i]), nrow=nsamples, ncol=1)
+  other_labels <- c(121:135)
+  pca_with_labels <- cbind(labels, pca$x)
+  colnames(pca_with_labels)[1] <- "Label"
+  pca_with_labels_df <- as.data.frame(pca_with_labels)
+  print(ggplot(pca_df, aes(x=PC1, y=PC2, col=pca_with_labels_df$Label))+geom_point()+scale_color_manual(values=cells[i]))
+  print(ggplot(pca_df, aes(x=PC1, y=PC2, col=pca_with_labels_df$Label))+geom_point()+scale_color_manual(values=cells[i])+geom_text(label=other_labels, hjust=2, vjust=1))
+}
+######HA##########################
+cells <- c("red", "green") 
+for (i in 1:2){
+  data_labels <- c(rep(1,15))
+  pca <- prcomp(vec_sample_PLs[[i]][61:75,], rank=10)
+  pca_df <- as.data.frame(pca$x)
+  labels <- matrix(sprintf("%s cells HA concentration =0", cells[i]), nrow=nsamples, ncol=1)
+  other_labels <- c(61:75)
+  pca_with_labels <- cbind(labels, pca$x)
+  colnames(pca_with_labels)[1] <- "Label"
+  pca_with_labels_df <- as.data.frame(pca_with_labels)
+  print(ggplot(pca_df, aes(x=PC1, y=PC2, col=pca_with_labels_df$Label))+geom_point()+scale_color_manual(values=cells[i]))
+  print(ggplot(pca_df, aes(x=PC1, y=PC2, col=labels))+geom_point()+scale_color_manual(values=cells[i])+geom_text(label=other_labels, hjust=2, vjust=1))
+}
+```
+
+```{r PCA for PLs with concentration 5 } 
+#####Gata6####################
+cells <- c("red", "green")
+for (i in 1:2){
+  data_labels <- c(rep(1,15))
+  pca <- prcomp(vec_sample_PLs[[i]][16:30,], rank=10)
+  pca_df <- as.data.frame(pca$x)
+  labels <- matrix(sprintf("%s cells Gata6 concentration =5", cells[i]), nrow=nsamples, ncol=1)
+  other_labels <- c(16:30)
+  pca_with_labels <- cbind(labels, pca$x)
+  colnames(pca_with_labels)[1] <- "Label"
+  pca_with_labels_df <- as.data.frame(pca_with_labels)
+  print(ggplot(pca_df, aes(x=PC1, y=PC2, col=pca_with_labels_df$Label))+geom_point()+scale_color_manual(values=cells[i]))
+  print(ggplot(pca_df, aes(x=PC1, y=PC2, col=labels))+geom_point()+scale_color_manual(values=cells[i])+geom_text(label=other_labels, hjust=2, vjust=1))
+}
+######HA##########################
+cells <- c("red", "green")
+for (i in 1:2){
+  data_labels <- c(rep(1,15))
+  pca <- prcomp(vec_sample_PLs[[i]][76:90,], rank=10)
+  pca_df <- as.data.frame(pca$x)
+  labels <- matrix(sprintf("%s cells HA concentration =5", cells[i]), nrow=nsamples, ncol=1)
+  other_labels <- c(76:90)
+  pca_with_labels <- cbind(labels, pca$x)
+  colnames(pca_with_labels)[1] <- "Label"
+  pca_with_labels_df <- as.data.frame(pca_with_labels)
+  print(ggplot(pca_df, aes(x=PC1, y=PC2, col=pca_with_labels_df$Label))+geom_point()+scale_color_manual(values=cells[i]))
+  print(ggplot(pca_df, aes(x=PC1, y=PC2, col=labels))+geom_point()+scale_color_manual(values=cells[i])+geom_text(label=other_labels, hjust=2, vjust=1))
+}
+```
+
+```{r PCA for PLs with concentration 15 } 
+#####Gata6####################
+cells <- c("red", "green")
+for (i in 1:2){
+  data_labels <- c(rep(1,15))
+  pca <- prcomp(vec_sample_PLs[[i]][31:45,], rank=10)
+  pca_df <- as.data.frame(pca$x)
+  labels <- matrix(sprintf("%s cells Gata6 concentration =15", cells[i]), nrow=nsamples, ncol=1)
+  other_labels <- c(31:45)
+  pca_with_labels <- cbind(labels, pca$x)
+  colnames(pca_with_labels)[1] <- "Label"
+  pca_with_labels_df <- as.data.frame(pca_with_labels)
+  print(ggplot(pca_df, aes(x=PC1, y=PC2, col=pca_with_labels_df$Label))+geom_point()+scale_color_manual(values=cells[i]))
+  print(ggplot(pca_df, aes(x=PC1, y=PC2, col=labels))+geom_point()+scale_color_manual(values=cells[i])+geom_text(label=other_labels, hjust=2, vjust=1))
+}
+######HA##########################
+cells <- c("red", "green")
+for (i in 1:2){
+  data_labels <- c(rep(1,15))
+  pca <- prcomp(vectorized_sample_PLs[91:105,], rank=10)
+  pca_df <- as.data.frame(pca$x)
+  labels <- matrix(sprintf("%s cells HA concentration =15", cells[i]), nrow=nsamples, ncol=1)
+  other_labels <- c(91:105)
+  pca_with_labels <- cbind(labels, pca$x)
+  colnames(pca_with_labels)[1] <- "Label"
+  pca_with_labels_df <- as.data.frame(pca_with_labels)
+  print(ggplot(pca_df, aes(x=PC1, y=PC2, col=pca_with_labels_df$Label))+geom_point()+scale_color_manual(values=cells[i]))
+  print(ggplot(pca_df, aes(x=PC1, y=PC2, col=labels))+geom_point()+scale_color_manual(values=cells[i])+geom_text(label=other_labels, hjust=2, vjust=1))
+}
+```
+```{r PCA for PLs with concentration 25 } 
+#####Gata6####################
+data_labels <- c(rep(1,15))
+pca <- prcomp(vectorized_sample_PLs[46:60,], rank=10)
+pca_df <- as.data.frame(pca$x)
+label_1 <- matrix("Gata6 concentration =25", nrow=nsamples, ncol=1)
+labels <- rbind(label_1)
+other_labels <- c(46:60)
+pca_with_labels <- cbind(labels, pca$x)
+colnames(pca_with_labels)[1] <- "Label"
+pca_with_labels_df <- as.data.frame(pca_with_labels)
+ggplot(pca_df, aes(x=PC1, y=PC2, col=pca_with_labels_df$Label))+geom_point(size=1)
+ggplot(pca_df, aes(x=PC1, y=PC2, col=pca_with_labels_df$Label))+geom_point(size=1)+geom_text(label=other_labels, hjust=1, vjust=1)
+#ggplot(pca_df, aes(x=PC1, y=PC2, col=pca_with_labels_df$Label))+geom_point(size=1)+geom_text(label=other_labels, hjust=1, vjust=1)+geom_count()
+######HA##########################
+data_labels <- c(rep(1,15))
+pca <- prcomp(vectorized_sample_PLs[106:120,], rank=10)
+pca_df <- as.data.frame(pca$x)
+label_1 <- matrix("HA concentration =25", nrow=nsamples, ncol=1)
+labels <- rbind(label_1)
+other_labels <- c(106:120)
+pca_with_labels <- cbind(labels, pca$x)
+colnames(pca_with_labels)[1] <- "Label"
+pca_with_labels_df <- as.data.frame(pca_with_labels)
+ggplot(pca_df, aes(x=PC1, y=PC2, col=pca_with_labels_df$Label))+geom_point(size=1)
+ggplot(pca_df, aes(x=PC1, y=PC2, col=pca_with_labels_df$Label))+geom_point(size=1)+geom_text(label=other_labels, hjust=1, vjust=1)
+```
+
+
+```{r permutation test, eval=FALSE}
+#vectorized_PLs <- cbind(vec_red, vec_green, vec_pos)[1:60,] #pick red, green or all cells
+#vectorized_PLs <- cbind(vec_red_1[1:60, 1:4240], vec_red_0[1:60, 1:2870], vec_green_1[1:60, 1:4730], vec_green_0[1:60, 1:5950])
+vectorized_PLs <- cbind(vec_red_1[61:120, 1129:3760], vec_green_1[61:120, 1459:4860], vec_pos_1[61:120, 1246:4150], vec_neg_1[61:120, 1378:4590])
+#vectorized_PLs <- cbind(rbind(counts[[2]][[1]], counts[[2]][[2]], counts[[2]][[3]], counts[[2]][[4]]))
+tic()
+nrepeats <- 10000
+print("Permutation test results for Gata6:")
+for (i in 1:3){
+  for (j in (i+1):4){
+  perm_test <- permutation.test(vectorized_PLs[(1+15*(i-1)):(15+15*(i-1)),],   vectorized_PLs[(15*(j-2)+16):(15*(j-2)+30),], num.repeats = nrepeats)
+   print(sprintf("p-value %f: files %i-%i and %i-%i", perm_test, 1+15*(i-1), 15+15*(i-1), 16+15*(j-2), 30+15*(j-2)))
+  }
+}
+toc()
+```
+
+```{r SVM}
+cost <-10
+nrepeats <- 10
+num.folds <- 10
+
+data.labels <- matrix(c(rep(1,15),rep(-1,15)))
+vectorized_PLs <- cbind(vec_red_1[1:60, 1273:4240], vec_green_1[1:60, 1420:4730],vec_pos_1[1:60,1246:4150], vec_neg_1[1:60,1378:1370])
+#vectorized_PLs <- cbind(rbind(counts[[1]][[1]], counts[[1]][[2]], counts[[1]][[3]], counts[[1]][[4]]), vec_red[1:60, 5389:18400], vec_green[1:60, 5332:17770], vec_pos[1:60, 5533:18410], vec_neg[1:60,2860:9530])
+vectorized_PLs <- cbind(rbind(counts[[1]][[1]], counts[[1]][[2]], counts[[1]][[3]], counts[[1]][[4]]), vec_red[1:60, 1797:26970], vec_green[1:60, 2238:17770], vec_pos[1:60,1454:18410], vec_neg[1:60,1111:9530])
+#vectorized_PLs <- cbind(rbind(counts[[2]][[1]], counts[[2]][[2]], counts[[2]][[3]], counts[[2]][[4]]))
+vec <-list(rbind(vectorized_PLs[1:15,], vectorized_PLs[16:30,]), rbind(vectorized_PLs[1:15,], vectorized_PLs[31:45,]),
+rbind(vectorized_PLs[1:15,], vectorized_PLs[46:60,]), rbind(vectorized_PLs[16:30,], vectorized_PLs[31:45,]), rbind(vectorized_PLs[16:30,], vectorized_PLs[46:60,]), rbind(vectorized_PLs[31:45,], vectorized_PLs[46:60,])) # length 6
+
+accuracy <- list()
+s <- list()
+for (k in 1:length(vec)){
+   s[[k]] <- list()
+  for (j in 1:nrepeats){
+    rand.perm <- sample(2*nsamples)
+    vectorized_sample_PLs_permuted <- vec[[k]][rand.perm,]
+    print(rand.perm)
+    data.labels.permuted <- data.labels[rand.perm]
+    svm_model.PL.CV <- list()
+    predictions_list <- vector()
+    predictions <- list()
+    for (i in 1:num.folds){
+       svm_model.PL.CV[[i]] <-  ksvm(vectorized_sample_PLs_permuted[-((3*(i-1)+1):(3*(i-1)+3)),],data.labels.permuted[-((3*(i-1)+1):(3*(i-1)+3))],type="C-svc",scaled =c(),kernel="vanilladot", C=cost)
+       predictions[[i]] <- predict(svm_model.PL.CV[[i]],vectorized_sample_PLs_permuted[((3*(i-1) +   1)):(3*(i-1) +3),])
+       predictions_list <- c(predictions_list, predictions[[i]])
+    }
+    print(predictions_list)
+  s[[k]][[j]] <- 0
+  for (i in 1:(2*nsamples)){
+    if (predictions_list[[i]] == data.labels.permuted[[i]]){
+      s[[k]][[j]] <- s[[k]][[j]]+1
+    }
+  }
+  }
+  print(k)
+  print(s[[k]])
+  accuracy[[k]] <- sum(unlist(s[[k]]))/(nrepeats*2*nsamples)
+  print(accuracy[[k]])
+}
+```
+
+
+
+```{r single-multiclass-SVM, eval=FALSE}
+tic()
+cost <- 10
+num.folds <- 15
+vectorized_PLs <- cbind(vec_red_1[1:60, 1273:4240], vec_green_1[1:60, 1420:4730],vec_pos_1[1:60,1246:4150], vec_neg_1[1:60,1378:1370])
+data.labels <- matrix(c(rep(0,15),rep(5,15), rep(15,15), rep(25,15)))
+svm_model.PL <- ksvm(vectorized_PLs,data.labels,type="C-svc",scaled=c(),kernel="vanilladot",C=cost,cross=num.folds)
+print(svm_model.PL)
+toc()
+```
+
+
+```{r confusion-matrix-multiclass-SVM}
+cost <- 10
+num.folds <- 15
+data.labels <- matrix(c(rep(0,15), rep(5,15), rep(15,15), rep(25,15)))
+n <- length(data_filenames)/length(cohorts) #number of files per cohort
+rand.perm <- sample(n)
+vectorized_PLs <- rbind(counts[[2]][[1]], counts[[2]][[2]], counts[[2]][[3]], counts[[2]][[4]])
+#vectorized_PLs <- cbind(rbind(vec_red_1[1:30, 1273:42400], vec_red_1[31:60, 1273:42400]), rbind(vec_green_1[1:30, 1420:47300],vec_green_1[31:60, 1420:47300]), rbind(vec_pos_1[1:30,1246:41500],vec_pos_1[31:60,1246:41500]), rbind(vec_neg_1[1:30,1378:13700], vec_neg_1[31:60,1378:13700]))
+#vectorized_PLs <- cbind(vec_red_1[61:120, 1273:4240], vec_green_1[61:120, 1420:4730],vec_pos_1[61:120,1246:4150], vec_neg_1[61:120,1378:1370])
+vectorized_PLs_permuted <- vectorized_PLs[rand.perm,]
+data.labels.permuted <- data.labels[rand.perm]
+svm_model.PL.CV <- list()
+predictions <- list()
+for (i in 1:num.folds){
+svm_model.PL.CV[[i]] <- ksvm(vectorized_PLs_permuted[-((4*(i-1) + 1):(4*(i-1)+4)),],data.labels.permuted[-((4*(i-1) + 1):(4*(i-1)+4))],type="C-svc",scaled = c(),kernel="vanilladot")
+predictions[[i]] <- predict(svm_model.PL.CV[[i]],vectorized_PLs_permuted[((4*(i-1) + 1):(4*(i-1)+4)),])
+}
+predictions <- unlist(predictions)
+s <- 0
+for (i in 1:n){
+    if (predictions[[i]] == data.labels.permuted[[i]]){
+      s <- s+1
+    }
+}
+#for (i in 1:n){
+#    if (predictions[[i]] != data.labels.permuted[[i]] & data.labels.permuted[[i]]==15 & predictions[[i]]==25){
+ #     print(rand.perm[[i]])
+#    }
+#}
+print(s/n)
+table(unlist(predictions),data.labels.permuted)
+```
+
+```{r multiclass-SVM-with-repeats}
+cost <- 10
+nrepeats <- 10
+num.folds <- 15
+n <- length(data_filenames)/length(cohorts) #number of files per cohort
+data.labels <- matrix(c(rep(0,15), rep(5,15), rep(15,15), rep(25,15)))
+#vectorized_PLs <- rbind(counts[[2]][[1]], counts[[2]][[2]], counts[[2]][[3]], counts[[2]][[4]])
+vectorized_PLs <- cbind(rbind(vec_red_1[1:30, 1273:42400], vec_red_1[31:60, 1273:42400]), rbind(vec_green_1[1:30, 1420:47300],vec_green_1[31:60, 1420:47300]), rbind(vec_pos_1[1:30,1246:41500],vec_pos_1[31:60,1246:41500]), rbind(vec_neg_1[1:30,1378:13700], vec_neg_1[31:60,1378:13700]))
+#vectorized_PLs <- cbind(vec_red_1[61:120, 1273:4240], vec_green_1[61:120, 1420:4730],vec_pos_1[61:120,1246:4150], vec_neg_1[61:120,1378:1370])
+
+accuracy <- list()
+total_accuracy <- 0
+for (k in 1:nrepeats){
+  rand.perm <- sample(n)
+  vectorized_PLs_permuted <- vectorized_PLs[rand.perm,]
+  data.labels.permuted <- data.labels[rand.perm]
+  svm_model.PL.CV <- list()
+  predictions <- list()
+  for (i in 1:num.folds){
+    svm_model.PL.CV[[i]] <- ksvm(vectorized_PLs_permuted[-((4*(i-1) +    1):(4*(i-1)+4)),],data.labels.permuted[-((4*(i-1) + 1):(4*(i-1)+4))],type="C-svc",scaled = c(),kernel="vanilladot")
+    predictions[[i]] <- predict(svm_model.PL.CV[[i]],vectorized_PLs_permuted[((4*(i-1) + 1):(4*(i-1)+4)),])
+  }
+  predictions <- unlist(predictions)
+  s <- 0
+  for (i in 1:n){
+    if (predictions[[i]] == data.labels.permuted[[i]]){
+      s <- s+1
+    }
+  }
+#  for (i in 1:n){
+ #   if (predictions[[i]] == data.labels.permuted[[i]] & data.labels.permuted[[i]]==0){
+      #print(rand.perm[[i]])
+  #  }
+ # }
+  accuracy[[k]] <- s/nrow(vectorized_PLs)
+   print(accuracy[[k]])
+  table(unlist(predictions),data.labels.permuted)
+  total_accuracy <- total_accuracy+accuracy[[k]]
+}
+
+total_accuracy <- total_accuracy/n
+print(total_accuracy)
+```
+
+```{r SVR}
+cost <- 10
+nrepeats <- 10
+num.folds <- 15
+n <- length(data_filenames)/length(cohorts) #number of files per cohort
+#vectorized_PLs <- rbind(counts[[1]][[1]], counts[[1]][[2]], counts[[1]][[3]], counts[[1]][[4]])
+vectorized_PLs <- cbind(vec_red_1[1:60, 1273:4240], vec_green_1[1:60, 1420:4730],vec_pos_1[1:60,1246:4150], vec_neg_1[1:60,1378:1370])
+#vectorized_PLs <- cbind(rbind(vec_red_1[1:15, 1273:42400], vec_red_1[31:60, 1273:42400]), rbind(vec_green_1[1:15, 1420:47300],vec_green_1[31:60, 1420:47300]), rbind(vec_pos_1[1:15,1246:41500],vec_pos_1[31:60,1246:41500]), rbind(vec_neg_1[1:15,1378:13700], vec_neg_1[31:60,1378:13700]))
+
+data.labels <- c(rep(0,15),rep(5,15),rep(15,15),rep(25,15))
+predictions.list <- list()
+for (k in 1:nrepeats){
+  rand.perm <- sample(n)
+  perm.inv <- invPerm(rand.perm)
+  vectorized_PLs_permuted <- vectorized_PLs[rand.perm,]
+  data.labels.permuted <- data.labels[rand.perm]
+  svr_model <- list()
+  predictions.svr <- list()
+  for (i in 1:num.folds){
+    svr_model[[i]] <- ksvm(vectorized_PLs_permuted[-((4*(i-1) + 1):(4*(i-1)+4)),],data.labels.permuted[-((4*(i-1) + 1):(4*(i-1)+4))],scaled  = FALSE ,kernel="vanilladot",C = cost,epsilon = .01)
+    predictions.svr[[i]] <- predict(svr_model[[i]],vectorized_PLs_permuted[((4*(i-1) + 1):(4*(i-1)+4)),])
+  }
+  predictions.list[[k]] <- unlist(predictions.svr)[perm.inv]
+}
+
+prediction = NULL
+for (k in 1:nrepeats){
+  prediction = rbind(prediction,predictions.list[[k]])
+}
+prediction = colSums(prediction)/nrepeats
+
+
+plot(prediction)
+symbols <- c(21:24)
+plot(0, col="white", bty="o", xlim=c(1,n), ylim=c(min(prediction), max(prediction)), ylab="estimated dox concentration", xlab="")
+for (i in 1:4){
+  low_i <- (i-1)*15+1
+  high_i <- i*15
+  lines(cbind(low_i:high_i,data.labels[low_i:high_i]))
+  points(cbind(low_i:high_i,prediction[low_i:high_i]), pch=symbols[[i]], bg=viridis(4)[i])
+}
+legend("topleft", inset=0.01, legend=c("0", "5", "15", "25"),
+       pt.bg=viridis(4), pch=symbols, title=" Ground Truth ")
+
+```
