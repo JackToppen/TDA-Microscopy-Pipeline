@@ -4,7 +4,7 @@
   html_document:
   df_print: paged
 ---
-Iryna Hartsock, Ashleigh Thomas, Alex Elchesen
+Iryna Hartsock, Alex Elchesen
 February 2022
 
 ```{r global_options, echo=FALSE}
