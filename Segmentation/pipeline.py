@@ -45,7 +45,7 @@ for rfp in ["Nanog_Gata6"]:
                 ch_paths = [nanog_path, gata6_path]
 
                 # create Image object, read DAPI and other channels
-                image = Image(dapi_path, 16, ch_paths)
+                image = Image(dapi_path, 16, ch_paths, output_path)
                 image.read()
 
                 # perform image segmentation and calculate cell metrics
@@ -54,16 +54,11 @@ for rfp in ["Nanog_Gata6"]:
 
                 # calculate channel expression values then save to CSV
                 image.overlay_cells()
-                image.df.to_csv(output_path + "intensities.csv", index=False)
+                image.save_csv("intensities.csv")
 
-#print("overlaid mask and image: blue is leftover dapi staining (false negative?),")
-#print("green is false positive cells, light blue is correct segmentation")
-
-#mask = np.zeros((image.h ,image.w , 3))
-#mask[:, :, 1] = np.array(image.mask, dtype="uint16")
-#mask[:, :, 2] = image.dapi / np.mean(image.dapi)
-
-#fig = plt.figure(figsize=(10,10))
-#plt.imshow(mask)
-#plt.show()
+                # optional method to adjust parameters
+                #   - green is false positive cells
+                #   - light blue is correct segmentation
+                #   - dark blue is leftover dapi staining (false negative)
+                image.check_segmentation()
 
