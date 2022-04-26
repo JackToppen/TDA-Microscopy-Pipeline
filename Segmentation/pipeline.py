@@ -50,7 +50,7 @@ for rfp in ["Nanog_Gata6"]:
 
                 # perform image segmentation and calculate cell metrics
                 image.segment_pearson(min_rad_nucleus, max_rad_nucleus, num_sizes, channel=shape_channel_num)
-                image.getcellprops(output_path, dpi)
+                image.getcellprops()
 
                 # calculate channel expression values then save to CSV
                 image.overlay_cells()
