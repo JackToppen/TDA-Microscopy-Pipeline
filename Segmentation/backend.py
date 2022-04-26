@@ -1,3 +1,6 @@
+"""
+Adapated from Nitika et al 2022.
+"""
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,71 +9,70 @@ from skimage.measure import regionprops
 from skimage.filters import gaussian, threshold_local, threshold_minimum
 from skimage.feature import peak_local_max
 from skimage.segmentation import watershed
-from skimage.morphology import label,area_closing
+from skimage.morphology import label, area_closing
 from scipy import ndimage
 from matplotlib import colors
-import sys 
-import random
+import sys
 import math
 import os
 
-class Channel(object):
-  def __init__(self,image,name):
-    self.image = image
-    self.name = name
-    self.plot = None
-    self.intensities = None
+class Channel:
+    def __init__(self, image, name):
+        self.image = image
+        self.name = name
+        self.plot = None
+        self.intensities = None
 
-class Image(object):
-  def __init__(self,dapi_path,bits,channels_paths): 
-    self.dapi_path = dapi_path
-    self.channels_paths = channels_paths
-    self.bits = bits
-    self.dpi = 600
-    self.output_folder = "."
-    self.channels = []
-    self.cytoprops = []
-    self.cell_count = 0
-    self.dapi = None
-    self.df = pd.DataFrame()
+class Image:
+    def __init__(self, dapi_path, bit_depth, channels_paths): 
+        self.dapi_path = dapi_path
+        self.channels_paths = channels_paths
+        self.bits = bit_depth
+        self.dpi = 600
+        self.output_folder = "."
+        self.channels = []
+        self.cytoprops = []
+        self.cell_count = 0
+        self.dapi = None
+        self.df = pd.DataFrame()
 
-  def read(self):
-    if not os.path.exists(self.dapi_path): 
-      sys.exit(self.dapi_path+" file not found, check the file path for errors")
-    self.dapi = cv2.imread(self.dapi_path,-1)
-    self.h, self.w = self.dapi.shape
-    self.channels = [Channel(self.dapi,"dapi")]
-    cv2.normalize(self.dapi,self.dapi,0,2**self.bits,cv2.NORM_MINMAX)
-    for ch_path in self.channels_paths:
-      if not os.path.exists(ch_path): 
-        sys.exit(ch_path+" file not found, check the file path for errors")
-      self.channels.append(Channel(cv2.imread(ch_path,-1),os.path.splitext(os.path.basename(ch_path))[0]))
+    def read(self):
+        if not os.path.exists(self.dapi_path): 
+            sys.exit(self.dapi_path+" file not found, check the file path for errors")
+        self.dapi = cv2.imread(self.dapi_path,-1)
+        self.h, self.w = self.dapi.shape
+        self.channels = [Channel(self.dapi,"dapi")]
+        cv2.normalize(self.dapi,self.dapi,0,2**self.bits,cv2.NORM_MINMAX)
+        for ch_path in self.channels_paths:
+        if not os.path.exists(ch_path): 
+            sys.exit(ch_path+" file not found, check the file path for errors")
+        self.channels.append(Channel(cv2.imread(ch_path,-1),os.path.splitext(os.path.basename(ch_path))[0]))
 
-  def getcellprops(self,output_folder,dpi):
-      self.dpi = dpi
-      self.output_folder = output_folder
-      output_area = np.zeros((self.h,self.w))
-      output_perimeter = np.zeros((self.h,self.w))
-      output_eccentricity = np.zeros((self.h,self.w))
-      cells, self.X, self.Y, area, perimeter, eccentricity = [],[],[],[],[],[]
-      for i in range(self.cell_count):
-          if self.cytoprops[i]['area'] > 5:
-              cells.append(self.cytoprops[i])
-              self.X.append(self.cytoprops[i]['centroid'][0])
-              self.Y.append(self.cytoprops[i]['centroid'][1])
-              area.append(self.cytoprops[i]["area"])
-              perimeter.append(self.cytoprops[i]["perimeter"])
-              eccentricity.append(self.cytoprops[i]["eccentricity"])
-              for coord in self.cytoprops[i]['coords']:
-                output_area[coord[0],coord[1]] = self.cytoprops[i]["area"]
-                output_perimeter[coord[0],coord[1]] = self.cytoprops[i]["perimeter"]
-                output_eccentricity[coord[0],coord[1]] = self.cytoprops[i]["eccentricity"]
-      self.cell_count = len(cells)
-      self.cytoprops = cells
-      # self.plot(output_area,os.path.join(self.output_folder,"area.png"))
-      # self.plot(output_perimeter,os.path.join(self.output_folder,"perimeter.png"))
-      # self.plot(output_eccentricity,os.path.join(self.output_folder,"eccentricity.png"))
-      self.df = pd.DataFrame({"X":self.X,"Y":self.Y,"area":area,"perimeter":perimeter,"eccentricity":eccentricity})
+    def getcellprops(self, output_folder, dpi):
+        self.dpi = dpi
+        self.output_folder = output_folder
+        output_area = np.zeros((self.h,self.w))
+        output_perimeter = np.zeros((self.h,self.w))
+        output_eccentricity = np.zeros((self.h,self.w))
+        cells, self.X, self.Y, area, perimeter, eccentricity = [],[],[],[],[],[]
+        for i in range(self.cell_count):
+            if self.cytoprops[i]['area'] > 5:
+                cells.append(self.cytoprops[i])
+                self.X.append(self.cytoprops[i]['centroid'][0])
+                self.Y.append(self.cytoprops[i]['centroid'][1])
+                area.append(self.cytoprops[i]["area"])
+                perimeter.append(self.cytoprops[i]["perimeter"])
+                eccentricity.append(self.cytoprops[i]["eccentricity"])
+                for coord in self.cytoprops[i]['coords']:
+                    output_area[coord[0],coord[1]] = self.cytoprops[i]["area"]
+                    output_perimeter[coord[0],coord[1]] = self.cytoprops[i]["perimeter"]
+                    output_eccentricity[coord[0],coord[1]] = self.cytoprops[i]["eccentricity"]
+        self.cell_count = len(cells)
+        self.cytoprops = cells
+        # self.plot(output_area,os.path.join(self.output_folder,"area.png"))
+        # self.plot(output_perimeter,os.path.join(self.output_folder,"perimeter.png"))
+        # self.plot(output_eccentricity,os.path.join(self.output_folder,"eccentricity.png"))
+        self.df = pd.DataFrame({"X":self.X,"Y":self.Y,"area":area,"perimeter":perimeter,"eccentricity":eccentricity})
 
   def overlay_cells(self):
       for channel in self.channels:
