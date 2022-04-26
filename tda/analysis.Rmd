@@ -292,7 +292,7 @@ for (k in 1:nrepeats){
   total_accuracy <- total_accuracy+accuracy[[k]]
 }
 
-total_accuracy <- total_accuracy/n
+total_accuracy <- total_accuracy/nrepeats
 print(total_accuracy)
 ```
 
