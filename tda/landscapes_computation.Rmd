@@ -1,5 +1,5 @@
 ---
-  title: "Analyze cell patterning data"
+  title: "Computation of persistence landscapes and vectorized persistence landscapes for one type of cells"
   output:
   html_document:
   df_print: paged
@@ -36,10 +36,10 @@ print(sprintf("computation README: %s", README))
 print(sprintf("ncohorts=%i,nconcentrations=%i, nsamples=%i, percentile=%i, npatches=%i", ncohorts,  nconcentrations, nsamples, percentile, npatches))
 ```
 
-```{r display-diagrams, eval=FALSE}
+```{r plot-persistence-diagrams, eval=FALSE}
 #2 for homology in degree 1; 1 for homology in degree 0
 n <- 2 
-#pick type of a cell
+#pick a type of cells
 PDs <- PDs_red 
 i <- 2 # sample index
 k <- 1 #patch
@@ -72,6 +72,8 @@ landscape_length <- ceiling((max_x-min_x)/dx)
 
 print(sprintf("dx=%f, min_x=%f, max_x=%f, max_y=%f, landscape_length=%i", dx, min_x, max_x, max_y, landscape_length))
 ```
+
+
 ```{r compute-landscapes-and-plot-them}
  
 tic()
@@ -100,7 +102,7 @@ print(sprintf("min_PL_depth=%i, max_PL_depth=%i. Setting PL_depth_cap to %i", mi
 toc()
 ```
 
-```{r compute-average-PL-for-patches-and-plot-them}
+```{r compute-average-landscapes-for-patches-and-plot-them}
 PLs_avg <- list()
 for (i in 1:length(data_filenames)){
   PL_sum <- PLs[[i]][[1]]
@@ -142,7 +144,9 @@ for (i in 1:(npatches+1)){
   title(main=sprintf("%i patch %s:", i, data_filenames[index]))
 }  
 ```
-```{r average_PLs-for-each-concentration}
+
+
+```{r average-landscapes-for-each-concentration}
 tic()
 cohorts <- "Gata6"
 conc_avg_max_y <- 0
@@ -182,22 +186,8 @@ conc_avg_PLs <- list()
 toc()
 ```
 
-```{r avg-of-patch-PLs-for-each-sample}
-# average landscapes for each sample 
-tic()
-sample_avg_max_y <- 0
-sample_avg_PLs <- list()
-for (i in 1:120){
-  PL_sum <- PLs[[i]]
-  #print(i)
-  sample_avg_PLs[[i]] <- PLscale(1/length(PDs[[i]]), PL_sum)
-  sample_avg_max_y <- max(sample_avg_max_y, sample_avg_PLs[[i]]$getInternal()[1,,2], na.rm=TRUE)
-}
-toc()
-```
 
-
-```{r vectorize-avg-PLs}
+```{r vectorize-average-landscapes}
 vectorized_PLs <- vectorize_landscapes(PLs_avg, PL_depth_cap) 
 
 vec_red_1 <- vectorized_sample_PLs
@@ -208,11 +198,9 @@ vec_red_1 <- vectorized_sample_PLs
 #vec_pos_0 <- vectorized_sample_PLs
 #vec_neg_1 <- vectorized_sample_PLs
 #vec_neg_0 <- vectorized_sample_PLs
-#vec_pos <- vectorized_sample_PLs
-#vec_neg <- vectorized_sample_PLs
 #vec_gr_neg <- vectorized_sample_PLs
 #vec_red_gr <- cbind(vec_red, vec_green)
 #vec_red_pos <- vectorized_sample_PLs
 ```
 
-```{}
+```{r }
