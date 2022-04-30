@@ -32,7 +32,7 @@ source("config.R")
 
 ```{r load-data}
 #load(load_file)
-print(sprintf("computation README: %s", README))
+#print(sprintf("computation README: %s", README))
 print(sprintf("ncohorts=%i,nconcentrations=%i, nsamples=%i, percentile=%i, npatches=%i", ncohorts,  nconcentrations, nsamples, percentile, npatches))
 ```
 
