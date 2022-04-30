@@ -22,12 +22,14 @@ for (c in c("Gata6","HA")){
   }
 }
 
+data_filenames <- list()
+for (i in 1:length(files)){
+  data_filenames[i] <- paste0(files[i],".csv")
+}
+
+
 nconcentrations <- length(concentrations)
 ncohorts <- length(cohorts)
 npatches <- 4
 nsamples <- length(data_filenames)/(length(cohorts)*length(concentrations)) #number of samples per concentration 
 
-data_filenames <- list()
-for (i in 1:length(files)){
-  data_filenames[i] <- paste0(files[i],".csv")
-}
