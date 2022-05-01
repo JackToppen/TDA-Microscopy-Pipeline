@@ -19,7 +19,7 @@ library(tictoc)
 library(tdatools)
 source("./source/intro_tda.R")
 source("./source/landscape_utilities.R")
-source("persistence_computations.R")
+#source("persistence_computations.R")
 ```
 
 ```{r config}
@@ -39,8 +39,11 @@ print(sprintf("ncohorts=%i,nconcentrations=%i, nsamples=%i, percentile=%i, npatc
 ```{r plot-persistence-diagrams, eval=FALSE}
 #2 for homology in degree 1; 1 for homology in degree 0
 n <- 2 
-#pick a type of cells
-PDs <- PDs_red 
+#Pick a type of cells
+#PDs <- PDs_red 
+#PDs <- PDs_green
+#PDs <- PDs_pos
+PDs <- PDs_neg 
 i <- 2 # sample index
 k <- 1 #patch
 #plot persistence diagram
@@ -85,7 +88,7 @@ min_PL_depth <- Inf # lowest number of landscapes per diagram
 for (i in 1:length(data_filenames)){ # for each sample
    #print(i)
   PLs[[i]] <- list()
-  for (k in 1:patches){
+  for (k in 1:npatches){
     PLs[[i]][[k]] <- list()
     PLs[[i]][[k]] <- landscape0(PDs[[i]][[k]]$pairs[[n]], degree=1, exact=FALSE, dx=dx, min_x=min_x, max_x=max_x)
     #plot_landscape(PLs[[i]][[k]], max_y)
@@ -110,8 +113,8 @@ for (i in 1:length(data_filenames)){
     PL_sum <- PLsum(PL_sum, PLs[[i]][[k+1]])
   }
   PLs_avg[[i]] <- PLscale(1/npatches, PL_sum)
-  plot_landscape(PLs_avg[[i]], max_y)
-  title(main=sprintf("%f file %s:", i, data_filenames[i]))
+  #plot_landscape(PLs_avg[[i]], max_y)
+  #title(main=sprintf("%f file %s:", i, data_filenames[i]))
 }
 
 ```
@@ -190,17 +193,21 @@ toc()
 ```{r vectorize-average-landscapes}
 vectorized_PLs <- vectorize_landscapes(PLs_avg, PL_depth_cap) 
 
-vec_red_1 <- vectorized_sample_PLs
-#vec_red_0 <- vectorized_sample_PLs
-#vec_green_1 <- vectorized_sample_PLs
-#vec_green_0 <- vectorized_sample_PLs
-#vec_pos_1 <- vectorized_sample_PLs
-#vec_pos_0 <- vectorized_sample_PLs
-#vec_neg_1 <- vectorized_sample_PLs
-#vec_neg_0 <- vectorized_sample_PLs
-#vec_gr_neg <- vectorized_sample_PLs
+#vec_red_1 <- vectorized_PLs
+#PL_length_red <- landscape_length
+#vec_red_0 <- vectorized_PLs
+#vec_gr_1 <- vectorized_PLs
+#PL_length_gr <- landscape_length
+#vec_gr_0 <- vectorized_PLs
+#vec_pos_1 <- vectorized_PLs
+#PL_length_pos <- landscape_length
+#vec_pos_0 <- vectorized_PLs
+vec_neg_1 <- vectorized_PLs
+PL_length_neg <- landscape_length
+#vec_neg_0 <- vectorized_PLs
+#vec_gr_neg <- vectorized_PLs
 #vec_red_gr <- cbind(vec_red, vec_green)
-#vec_red_pos <- vectorized_sample_PLs
+#vec_red_pos <- vectorized_PLs
 ```
 
 ```{r }
