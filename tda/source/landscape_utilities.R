@@ -4,6 +4,44 @@
 # new way of plotting with specified maximum y value and no labels
 # code edited from original tda-tools code by Jose Bouza
 
+plot_landscape_internal <- function(internal, y_max, y_min=0){
+  infinity_sub=-1
+  line_width <- 1
+  # colors <- colorRamp(c("red", "blue"), numLevels(internal)) # outputs a function
+  # colors <- myColorRamp(c("red", "blue"), numLevels(internal)) # outputs a vector
+  colors <- c(1:numLevels(internal)) # outputs a vector
+  
+  for(level in 1:numLevels(internal)){
+    level_d <- accessLevel(internal,level)
+    if(infinity_sub != -1){
+      level_d[level_d == Inf] <- infinity_sub
+      level_d[level_d == -Inf] <- -infinity_sub
+    }
+  }
+  level1 <- accessLevel(internal,1)
+  
+  # plot first level
+  if (missing(y_max)){ # plot as usual
+    plot(level1[,1],level1[,2], type='l', xlab='', ylab='', bty="n", col=viridis(1), lwd=line_width)
+  } else { # specify limits of y axis
+    plot(level1[,1],level1[,2], type='l', ann=FALSE, bty="n", col=viridis(1), lwd=line_width, ylim=c(y_min,y_max))#viridis(numLevels(internal))
+  }
+  
+  if(numLevels(internal) > 1){
+    for(level in 2:numLevels(internal)){
+      level_d <- accessLevel(internal,level)
+      lines(level_d[,1], level_d[,2], col=viridis(10)[level %% 10], lwd=line_width)
+    }
+  }
+}
+
+plot_landscape <- function(PersistenceLandscape, y_max){
+  internal <- PersistenceLandscape$getInternal()
+  plot_landscape_internal(internal, y_max)
+}
+
+
+
 get_landscape_y_max <- function(PersistenceLandscape){
   y_max <- 0
   internal <- PersistenceLandscape$getInternal()
