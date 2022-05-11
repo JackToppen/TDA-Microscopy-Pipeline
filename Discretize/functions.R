@@ -14,8 +14,8 @@ normalize <- function(df) {
   dapi <- df$dapi
   
   # normalize the GFP and RFP values
-  df$gfp_normalized <- df$gfp_bgc / dapi
-  df$rfp_normalized <- df$rfp_bgc / dapi
+  df$gfp_normalized <- df$NANOG / dapi
+  df$rfp_normalized <- df$GATA6 / dapi
   
   return(df)
 }
@@ -60,15 +60,19 @@ colorscheme <- function(...) {
   # assign colors based on the discrete GFP and RFP values
   if (gfp == 1) {
     if (rfp == 1) {
-      return("white")
+      # both high
+      return("#FFFFFF")
     } else {
-      return("green")
+      # GFP high, RFP low
+      return("#FFB000")
     }
   } else {
     if (rfp == 1) {
-      return("red")
+      # RFP high, GFP low
+      return("#DC267F")
     } else {
-      return("yellow")
+      # both low
+      return("#785EF0")
     }
   }
 }
