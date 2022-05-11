@@ -17,20 +17,20 @@ shape_channel_num = 1    # put 0 to use dapi for morphology metrics calculations
 dpi = 600    # output image quality
 
 # specify input path for image-set and output directory
-input_path = "~/Research/TDA/R/TDA-Microscopy-Pipeline/Example/Input/"
-output_path = "~/Research/TDA/R/TDA-Microscopy-Pipeline/Example/Output/"
+input_path = "~/Research/TDA/R/TDA-Microscopy-Pipeline/Input/"
+output_path = "~/Research/TDA/R/TDA-Microscopy-Pipeline/Output/"
 
 # get absolute paths for input and output directories
 input_path = abspath(expanduser(input_path))
 output_path = abspath(expanduser(output_path))
 
 # iterate through RFP types
-for rfp in ["Nanog_Gata6"]:
+for rfp in ["Nanog_Gata6", "Nanog_HA"]:
     # doxycycline concentrations
-    for dox in [0]:
+    for dox in [0, 5, 15, 25]:
         # iterate over wells/locations
-        for well in [1]:
-            for loc in [1]:
+        for well in [1, 2, 3]:
+            for loc in [1, 2, 3, 4, 5]:
                 # get back to directory
                 dir_path = input_path + f"/{rfp}/concentration_{dox}/{rfp}_{dox}_{well}_{loc}/"
                 output_path = output_path + f"/{rfp}/concentration_{dox}/{rfp}_{dox}_{well}_{loc}/"
@@ -60,5 +60,5 @@ for rfp in ["Nanog_Gata6"]:
                 #   - green is false positive cells
                 #   - light blue is correct segmentation
                 #   - dark blue is leftover dapi staining (false negative)
-                image.check_segmentation()
+                # image.check_segmentation()
 
