@@ -1,6 +1,5 @@
 #Iryna Hartsock
 #Pick the best patches based on cell number count
-#March 2022
 
 library(tictoc)
 
@@ -51,7 +50,8 @@ for (j in 1:ncohorts){                    #j=1 Gata6, j=2 HA
     neg_patch[[j]][[c]] <- list()
     cell_number_neg[[j]][[c]]<- list()
     neg_patches[[j]][[c]] <- list()
-    for (i in 1:nsamples){               #k corresponds to 4 patches
+    for (i in 1:nimages){               #k corresponds to 4 patches
+      all_cells <- read.csv(file=paste0(data_file_location,data_filenames[[i+(c-1)*nimages+(j-1)*nimages*nconcentrations]]), header=TRUE)
       red_patch[[j]][[c]][[i]] <- list()
       cell_number_r[[j]][[c]][[i]] <- list()
       green_patch[[j]][[c]][[i]] <- list()
@@ -60,58 +60,52 @@ for (j in 1:ncohorts){                    #j=1 Gata6, j=2 HA
       cell_number_pos[[j]][[c]][[i]] <- list()
       neg_patch[[j]][[c]][[i]] <- list()
       cell_number_neg[[j]][[c]][[i]] <- list()
-      for (k in 1:1){
-        all_cells <- read.csv(file=paste0(data_file_location,data_filenames[[i+(c-1)*15+(j-1)*60]]), header=TRUE)
-        all_cells <- all_cells[which( 500 <= all_cells[,1] & all_cells[,1] < 2500 & 500 <= all_cells[,2] & all_cells[,2] < 2500),]
-       # if (k==1){
-       #   all_cells <- all_cells[which( 500 <= all_cells[,1] & all_cells[,1] < 1500 & 500 <= all_cells[,2] & all_cells[,2] < 1500),]
-       # } else if (k==2){
-      #    all_cells <- all_cells[which( 1500 <= all_cells[,1] & all_cells[,1] < 2500 & 500 <= all_cells[,2] & all_cells[,2] < 1500),]
-       # } else if (k==3){
-        #  all_cells <- all_cells[which( 500 <= all_cells[,1] & all_cells[,1] < 1500 & 1500 <= all_cells[,2] & all_cells[,2] < 2500),]
-       # } else {
-       #   all_cells <- all_cells[which( 1500 <= all_cells[,1] & all_cells[,1] < 2500 & 1500 <= all_cells[,2] & all_cells[,2] < 2500),]
-       # }
-        #red
-        red_patch[[j]][[c]][[i]][[k]] <- all_cells[ which((all_cells[,8]==0 & all_cells[,9]==1)), ] 
-        cell_number_r[[j]][[c]][[i]][[k]] <- nrow(red_patch[[j]][[c]][[i]][[k]])
-        #red_patches[[j]][[c]][[i+(k-1)*15]] <- red_patch[[j]][[c]][[k]][[i]] #list of all patches for a fixed concentration and cohort
-        #green
-        green_patch[[j]][[c]][[i]][[k]] <- all_cells[ which((all_cells[,8]==1 & all_cells[,9]==0)), ] 
-        cell_number_gr[[j]][[c]][[i]][[k]] <- nrow(green_patch[[j]][[c]][[i]][[k]])
-        #green_patches[[j]][[c]][[i+(k-1)*15]] <- green_patch[[j]][[c]][[k]][[i]]
-        #double positive
-        pos_patch[[j]][[c]][[i]][[k]] <- all_cells[ which((all_cells[,8]==1 & all_cells[,9]==1)), ] 
-        cell_number_pos[[j]][[c]][[i]][[k]] <- nrow(pos_patch[[j]][[c]][[i]][[k]])
-        #pos_patches[[j]][[c]][[i+(k-1)*15]] <- pos_patch[[j]][[c]][[k]][[i]] 
-        #double negative
-        neg_patch[[j]][[c]][[i]][[k]] <- all_cells[ which((all_cells[,8]==0 & all_cells[,9]==0)), ] 
-        cell_number_neg[[j]][[c]][[i]][[k]] <- nrow(neg_patch[[j]][[c]][[i]][[k]])
-        #neg_patches[[j]][[c]][[i+(k-1)*15]] <- neg_patch[[j]][[c]][[k]][[i]]  
+      for (k in 1:sqrt(npatches)){
+        for (r in 1:sqrt(npatches)){
+          #every image is 3000x3000 
+          patch <- all_cells[which( ((3000/sqrt(npatches))*(r-1)) <= all_cells[,1] 
+                                    & all_cells[,1] < ((3000/sqrt(npatches))*r) 
+                                    & ((3000/sqrt(npatches))*(k-1)) <= all_cells[,2] 
+                                    & all_cells[,2] < ((3000/sqrt(npatches))*k)),]
+          #red
+          red_patch[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]] <- patch[ which((patch[,8]==0 & patch[,9]==1)), ] 
+          cell_number_r[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]] <- nrow(red_patch[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]])
+          #red_patches[[j]][[c]][[i+(k-1)*15]] <- red_patch[[j]][[c]][[k]][[i]] #list of all patches for a fixed concentration and cohort
+          #green
+          green_patch[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]] <- patch[ which((patch[,8]==1 & patch[,9]==0)), ] 
+          cell_number_gr[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]] <- nrow(green_patch[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]])
+          #green_patches[[j]][[c]][[i+(k-1)*15]] <- green_patch[[j]][[c]][[k]][[i]]
+          #double positive
+          pos_patch[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]] <- patch[ which((patch[,8]==1 & patch[,9]==1)), ] 
+          cell_number_pos[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]] <- nrow(pos_patch[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]])
+          #pos_patches[[j]][[c]][[i+(k-1)*15]] <- pos_patch[[j]][[c]][[k]][[i]] 
+          #double negative
+          neg_patch[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]] <- patch[ which((patch[,8]==0 & patch[,9]==0)), ] 
+          cell_number_neg[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]] <- nrow(neg_patch[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]])
+          #neg_patches[[j]][[c]][[i+(k-1)*15]] <- neg_patch[[j]][[c]][[k]][[i]]  
+        }
       }
     }
   }
 }
+toc()
 
 
 counts <- list()
-for (j in 1:ncohorts){ 
-  counts[[j]] <- list()
-  for (c in 1:nconcentrations){
-    counts[[j]][[c]] <- vector()
-    for (i in 1:nsamples){
-      counts[[j]][[c]] <- rbind(counts[[j]][[c]],c(cell_number_r[[j]][[c]][[i]][[1]], cell_number_gr[[j]][[c]][[i]][[1]], cell_number_pos[[j]][[c]][[i]][[k]], cell_number_neg[[j]][[c]][[i]][[k]]))
-    }
-  }
+for (j in 1:ncohorts){
+  counts[[j]] <- cbind(matrix(unlist(cell_number_r[[j]]), nrow=length(unlist(cell_number_r[[j]]))), 
+                       matrix(unlist(cell_number_gr[[j]]), nrow=length(unlist(cell_number_gr[[j]]))), 
+                       matrix(unlist(cell_number_pos[[j]]), nrow=length(unlist(cell_number_pos[[j]]))), 
+                       matrix(unlist(cell_number_neg[[j]]), nrow=length(unlist(cell_number_neg[[j]]))))
 }
 
 #Compute histograms
 cell_number <- cell_number_r #pick a cell type
-for (j in 1:2){
+for (j in 1:ncohorts){
   if (j==1){
     cohort <- "Gata6"
   } else {cohort <- "HA"}
-  for (c in 1:4){
+  for (c in 1:nconcentrations){
     if (c==1){
       concentration <- 0
     } else if (c==2){
@@ -119,9 +113,27 @@ for (j in 1:2){
     } else if (c==3){
       concentration <- 15
     } else {concentration <- 25 }
-    
-    h <- hist(unlist(cell_number[[j]][[c]]), breaks=20, ylim=c(0,35), main=sprintf("Histogram for %s concentration %1.0f, p.%1.0f", cohort, concentration, percentile), xlab="number of cells")
-    text(h$mids, h$counts, labels=h$counts, adj=c(0.5,-0.5))
+    hist(unlist(cell_number[[j]][[c]]), breaks=40, ylim=c(0,300), main=sprintf("Histogram for %s concentration %1.0f, p.%1.0f", cohort, concentration, percentile), xlab="number of cells")
+     #text(h$mids, h$counts, labels=h$counts, adj=c(0.5,-0.5))
   }
 }
 
+#Compute number of patches that are either empty or contain only one point
+cell_number <- cell_number_r
+almost_empty <- list()
+for (j in 1:ncohorts){
+  almost_empty[[j]] <- list()
+  for (c in 1:nconcentrations){
+    print(sprintf("concentration: %i", c))
+    almost_empty[[j]][[c]] <- list()
+    for (i in 1:nimages){
+      almost_empty[[j]][[c]][[i]] <- vector()
+      for (k in 1:npatches){
+        if ((cell_number_r[[j]][[c]][[i]][[k]]+cell_number_gr[[j]][[c]][[i]][[k]]+cell_number_pos[[j]][[c]][[i]][[k]]+cell_number_neg[[j]][[c]][[i]][[k]]) <= 10){
+          almost_empty[[j]][[c]][[i]] <- append(almost_empty[[j]][[c]][[i]], k)
+        }
+      }
+      print(length(unlist(almost_empty[[j]][[c]][[i]])))
+    }
+  }
+}
