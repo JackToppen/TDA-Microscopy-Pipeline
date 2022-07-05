@@ -32,7 +32,7 @@ source("config.R")
 print(sprintf("ncohorts=%i,nconcentrations=%i, nsamples=%i, percentile=%i, npatches=%i", ncohorts,  nconcentrations, nsamples, percentile, npatches))
 ```
 ```{r pick-cell-type-and-homology-degree}
-type <- "double positive"   #red, green, double positive, double negative
+type <- "red"   #red, green, double positive, double negative
 n <- 2  #2 for homology in degree 1; 1 for homology in degree 0
 ```
 

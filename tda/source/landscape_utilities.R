@@ -61,7 +61,7 @@ plot_landscape_internal_levels <- function(internal, l1, l2, y_max, y_min=0){
   
   # plot first level
   if (missing(y_max)){ # plot as usual
-    plot(level1[,1],level1[,2], type='l', xlab='', ylab='',  col=mycolors[1], lwd=line_width, ylim=c(-2.2, 0.5))
+    plot(level1[,1],level1[,2], type='l', xlab='', ylab='',  col=mycolors[1], lwd=line_width)
   } else { # specify limits of y axis
     plot(level1[,1],level1[,2], type='l', ann=FALSE, col=mycolors[1], lwd=line_width, ylim=c(y_min,y_max))#viridis(numLevels(internal))
   }
