@@ -18,8 +18,18 @@ from skimage.feature import peak_local_max
 from skimage.segmentation import watershed
 from skimage.morphology import label, area_closing
 
+
+def read_image(path):
+    """ Read microscopy images such that the origin
+        for the cell locations is in the bottom-left.
+    """
+    # read the entire image and rotate to such that origin is bottom-left
+    image = cv2.imread(path, -1)
+    return cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+
+
 class Channel:
-    """ Class for storing each expression channel.
+    """ Object for storing each expression channel.
     """
     def __init__(self, image, name):
         self.image = image
@@ -27,7 +37,10 @@ class Channel:
         self.plot = None
         self.intensities = None
 
+
 class Image:
+    """ Object for processing each microscopy image.
+    """
     def __init__(self, dapi_path, bit_depth, channels_paths, output_path): 
         self.dapi_path = dapi_path
         self.bit_depth = bit_depth
@@ -48,7 +61,7 @@ class Image:
             channel objects.
         """
         # read image and get shape
-        self.dapi = cv2.imread(self.dapi_path, -1)
+        self.dapi = read_image(self.dapi_path)
         self.h, self.w = self.dapi.shape
 
         # store DAPI as the first channel and normalize the image
@@ -57,7 +70,7 @@ class Image:
 
         # read the other images to separate Channel objects
         for ch_path in self.channels_paths:
-            self.channels.append(Channel(cv2.imread(ch_path, -1), os.path.splitext(os.path.basename(ch_path))[0]))
+            self.channels.append(Channel(read_image(ch_path), os.path.splitext(os.path.basename(ch_path))[0]))
 
     def getcellprops(self):
         """ Updates data frame with cells that have area larger than 5.
@@ -87,7 +100,7 @@ class Image:
     def save_csv(self, filename):
         """ Saves a CSV with cell metrics data.
         """
-        self.df.to_csv(self.output_path + filename, index=False)
+        self.df.to_csv(self.output_path + filename)
 
     def check_segmentation(self):
         """ Optional method to check segmentation of confocal image.
@@ -145,9 +158,13 @@ class Image:
                                       'greenyellow','yellow','gold','orange','red','brown'])
         bounds = [0, 1e-9, m/12, m/6, m/4, m/3, m/2.4, m/2, 0.58*m, m/1.5, 0.75*m, m/1.2, 0.91*m, m]
         norm = colors.BoundaryNorm(bounds, cmap.N)
+        
+        # transform image to display correctly
+        image = cv2.flip(image, 0)
+        image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
 
         # read the image to a plot and save the figure
-        plt.imshow(image, cmap=cmap, norm=norm)
+        plt.imshow(image, cmap=cmap, norm=norm, origin="lower")
         plt.savefig(name, dpi=self.dpi, bbox_inches="tight")
         plt.close('all')
 
@@ -253,3 +270,4 @@ class Image:
         # update cell metrics
         self.cytoprops = regionprops(nuclei_labels)
         self.cell_count = len(self.cytoprops)
+

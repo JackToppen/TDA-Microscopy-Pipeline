@@ -25,27 +25,27 @@ input_path = abspath(expanduser(input_path))
 output_path = abspath(expanduser(output_path))
 
 # iterate through RFP types
-for rfp in ["Nanog_Gata6", "Nanog_HA"]:
+for rfp in ["Nanog_Gata6"]:
     # doxycycline concentrations
     for dox in [0, 5, 15, 25]:
         # iterate over wells/locations
         for well in [1, 2, 3]:
             for loc in [1, 2, 3, 4, 5]:
                 # get back to directory
-                dir_path = input_path + f"/{rfp}/concentration_{dox}/{rfp}_{dox}_{well}_{loc}/"
-                output_path = output_path + f"/{rfp}/concentration_{dox}/{rfp}_{dox}_{well}_{loc}/"
+                in_dir_path = input_path + f"/{rfp}/{dox}/{rfp}_{dox}_{well}_{loc}/"
+                out_dir_path = output_path + f"/{rfp}/{dox}/{rfp}_{dox}_{well}_{loc}/"
 
                 # make directory for outputs
-                os.makedirs(output_path, exist_ok=True)
+                os.makedirs(out_dir_path, exist_ok=True)
 
                 # get paths to image files
-                dapi_path = dir_path + "DAPI.tif"
-                nanog_path = dir_path + "NANOG.tif"
-                gata6_path = dir_path + "GATA6.tif"
+                dapi_path = in_dir_path + "DAPI.tif"
+                nanog_path = in_dir_path + "NANOG.tif"
+                gata6_path = in_dir_path + "GATA6.tif"
                 ch_paths = [nanog_path, gata6_path]
 
                 # create Image object, read DAPI and other channels
-                image = Image(dapi_path, 16, ch_paths, output_path)
+                image = Image(dapi_path, 16, ch_paths, out_dir_path)
                 image.read()
 
                 # perform image segmentation and calculate cell metrics

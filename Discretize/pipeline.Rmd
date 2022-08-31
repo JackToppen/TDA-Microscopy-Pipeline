@@ -13,28 +13,32 @@ install.packages(c("ggplot2", "ggforce", "cowplot"))
 This code normalizes the expression values for GFP/RFP based on the cell specific DAPI nuclear stain expression.
 
 ```{r}
+# pull functions from functions.R script
+source("functions.R")
+
 # set working directory to location of microscopy CSVs
-setwd("~/Documents/Research/TDA/R/")
+setwd("~/Documents/Research/TDA/R/TDA-Microscopy-Pipeline")
 
 # iterate over treatment groups
-for (sig in c("Nanog_Gata6", "Nanog_HA")) {
-  for (conc in c(0, 5, 15, 25)) {
-    for (well in c(1, 2, 3)) {
-      for (loc in c(1, 2, 3, 4, 5)) {
+for (sig in c("Nanog_Gata6")) {
+  for (conc in c(0, 25)) {
+    for (well in c(1)) {
+      for (loc in c(1)) {
         # get path to microscopy CSV file
-        csv_path <- paste0("Output/", sig, "/concentration_", conc, "/")
+        csv_path <- paste0("Output/",sig,"/",conc,"/",sig,"_",conc,"_",well,"_",loc,"/")
+        csv_name <- "intensities.csv"
 
         # make new directory for storing normalized GFP/RFP values
-        norm_path <- paste0("normalized/", signal, "/concentration_", conc, "/")
+        norm_path <- paste0("Normalized/",sig,"/",conc,"/")
         dir.create(norm_path, recursive=TRUE, showWarnings=FALSE)
 
         # get the new CSV filename and full path
-        file_name <- paste0(sig, "_", conc, "_", well, "_", loc, ".csv")
+        norm_name <- paste0(sig,"_",conc,"_",well,"_",loc,".csv")
 
         # read the CSV, normalize the GFP/RFP, and save to new CSV
-        df <- read.csv(paste0(csv_path, file_name))
+        df <- read.csv(paste0(csv_path, csv_name))
         df <- normalize(df)
-        save_to_csv(df, paste0(norm_path, file_name))
+        save_to_csv(df, paste0(norm_path, norm_name))
       }
     }
   }
@@ -46,38 +50,37 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
 Thresholds will be generated for each percentile and then applied to the data.
 
 ```{r}
-# pull functions from functions.R scripts
-setwd("~/Documents/Research/TDA/R/TDA-Microscopy-Pipeline/Discretize")
+# pull functions from functions.R script
 source("functions.R")
 
 # set working directory to location of microscopy CSVs
-setwd("~/Documents/Research/TDA/R/")
+setwd("~/Documents/Research/TDA/R/TDA-Microscopy-Pipeline/")
 
 # hold actual values for dox concentrations and threshold percentiles
-dox <- c(0, 5, 15, 25)
-percs <- c(75, 80, 85, 90, 95)
+dox <- c(0, 25)
+percs <- c(70)
 
 # store distributions of cell types in a 2D list of 2x2 matrices
 M <- list()
-for (perc_index in c(1, 2, 3, 4, 5)) {
+for (perc_index in c(1)) {
   M[[perc_index]] <- list()
-  for (dox_index in c(1, 2, 3, 4)) {
+  for (dox_index in c(1, 2)) {
     M[[perc_index]][[dox_index]] <- matrix(rep(0,4), ncol=2)
   }
 }
 
 # iterate over treatment groups
-for (sig in c("Nanog_Gata6", "Nanog_HA")) {
-  for (loc in c(1, 2, 3, 4, 5)) {
+for (sig in c("Nanog_Gata6")) {
+  for (loc in c(1)) {
     # store location specific expression values for generating thresholds
     gfp_values <- list()
     rfp_values <- list()
     
     # load baseline CSVs for generating thresholds
-    for (well in c(1, 2, 3)) {
+    for (well in c(1)) {
       # directory path for baseline expression values
-      dir_gfp <- paste0("normalized/", sig, "/concentration_25/")
-      dir_rfp <- paste0("normalized/", sig, "/concentration_0/")
+      dir_gfp <- paste0("Normalized/", sig, "/25/")
+      dir_rfp <- paste0("Normalized/", sig, "/0/")
       
       # get CSV file names
       gfp_file <- paste0(sig, "_25_", well, "_", loc, ".csv")
@@ -92,7 +95,7 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
       rfp_values[[well]] <- rfp_df[, 7]
     }
     
-    for (perc_index in c(1, 2, 3, 4, 5)) {
+    for (perc_index in c(1)) {
       # get the percentile value
       perc <- percs[[perc_index]]
       
@@ -100,13 +103,13 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
       gfp_threshold <- gen_threshold(perc, gfp_values)
       rfp_threshold <- gen_threshold(perc, rfp_values)
       
-      for (dox_index in c(1, 2, 3, 4)) {
+      for (dox_index in c(1, 2)) {
         # get dox concentration value
         conc <- dox[[dox_index]]
           
-        for (well in c(1, 2, 3)) {
+        for (well in c(1)) {
           # get path to CSV file and file name
-          csv_path <- paste0("normalized/", sig, "/concentration_", conc, "/")
+          csv_path <- paste0("Normalized/", sig, "/", conc, "/")
           csv_name <- paste0(sig, "_", conc, "_", well, "_", loc, ".csv")
           
           # read the CSV, discretize the GFP/RFP values, and assign colors
@@ -115,14 +118,16 @@ for (sig in c("Nanog_Gata6", "Nanog_HA")) {
           df <- assign_color(df, show_double_low=TRUE)
           
           # get/make directory for storing discretized images and CSVs
-          disc_path <- paste0("Discretized/", perc, "/", sig, "/concentration_", conc, "/")
-          dir.create(disc_path, recursive=TRUE, showWarnings=FALSE)
+          disc_path_im <- paste0("Discretized-images/", perc, "/", sig, "/", conc, "/")
+          disc_path_csv <- paste0("Discretized-values/", perc, "/", sig, "/", conc, "/")
+          dir.create(disc_path_csv, recursive=TRUE, showWarnings=FALSE)
+          dir.create(disc_path_im, recursive=TRUE, showWarnings=FALSE)
       
           # get image and CSV names and save
           image_name <- paste0(sig, "_", conc, "_", well, "_", loc, ".png")
           csv_name <- paste0(sig, "_", conc, "_", well, "_", loc, ".csv")
-          save_image(df, paste0(disc_path, image_name))
-          save_to_csv(df, paste0(disc_path, csv_name))
+          save_image(df, paste0(disc_path_im, image_name))
+          save_to_csv(df, paste0(disc_path_csv, csv_name))
           
           # add to distribution table
           value <- gen_table(df, gfp_threshold, rfp_threshold)
@@ -140,10 +145,10 @@ Matrices containing the distribution of cell types based on the dox treatment an
 
 ```{r}
 # iterate over treatment groups
-for (perc_index in c(1, 2, 3, 4, 5)) {
-  for (dox_index in c(1, 2, 3, 4)) {
+for (perc_index in c(1)) {
+  for (dox_index in c(1, 2)) {
     # print a header based on the dox concentration and the threshold percentile
-    cat("dox: ", conce[[dox_index]], ", percentile: ", dox[[perc_index]], "\n", sep="")
+    cat("dox: ", dox[[dox_index]], ", percentile: ", percs[[perc_index]], "\n", sep="")
     
     # print the cell type distribution matrix
     print(M[[perc_index]][[dox_index]] / sum(M[[perc_index]][[dox_index]]))
