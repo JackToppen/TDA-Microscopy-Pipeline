@@ -1,11 +1,10 @@
 ---
-  title: "Computation of persistence landscapes and vectorized persistence landscapes for one type of cells"
+  title: "Computation of persistence landscapes and vectorized persistence landscapes for a chosen type of cells"
   output:
   html_document:
   df_print: paged
 ---
 Iryna Hartsock, Ashleigh Thomas, Alex Elchesen
-February 2022
 
 ```{r global_options, echo=FALSE}
 knitr::opts_chunk$set(echo=FALSE)
@@ -17,44 +16,47 @@ knitr::opts_knit$set(root.dir="/Users/Iryna/Github/cell-patterning-project")
 ```{r libraries, message=FALSE}
 library(tictoc)
 library(tdatools)
+library(viridisLite)
+library(viridis)
 source("./source/intro_tda.R")
 source("./source/landscape_utilities.R")
-#source("persistence_computations.R")
-```
-
-```{r config}
-
 source("config.R")
- 
-#load_file <- saved_computation_filepath
+#source("persistence_computations.R")
 ```
 
 
 ```{r load-data}
+#load_file <- saved_computation_filepath
 #load(load_file)
 #print(sprintf("computation README: %s", README))
 print(sprintf("ncohorts=%i,nconcentrations=%i, nsamples=%i, percentile=%i, npatches=%i", ncohorts,  nconcentrations, nsamples, percentile, npatches))
 ```
+```{r pick-cell-type-and-homology-degree}
+type <- "red"   #red, green, double positive, double negative
+n <- 2  #2 for homology in degree 1; 1 for homology in degree 0
+```
 
-```{r plot-persistence-diagrams, eval=FALSE}
-#2 for homology in degree 1; 1 for homology in degree 0
-n <- 2 
-#Pick a type of cells
-#PDs <- PDs_red 
-#PDs <- PDs_green
-#PDs <- PDs_pos
-PDs <- PDs_neg 
-i <- 2 # sample index
-k <- 1 #patch
-#plot persistence diagram
+
+```{r plot-persistence-diagrams}
+if (type == "red"){
+  PDs <- PDs_red
+} else if (type == "green"){
+  PDs <- PDs_green
+} else if (type == "double positive"){
+  PDs <- PDs_pos
+} else if (type == "double negative"){
+  PDs <- PDs_neg 
+}
+
+i <- 30 #pick image
+k <- 1 # pick patch
+
+par(pty="s", pch=20)
 PDplot(PDs[[i]][[k]]$pairs[[n]])
-title(main=sprintf("%s, patch %1.0f",data_filenames[i], k))
-
+title(main=sprintf("File %s, patch %1.0f, %s cells", i, k, type))
 ```
 
 ```{r compute-landscape-parameters}
-# need to find min_x, max_x, max_y -- global for every patch
-# look for large spikes in landscapes (max_y) for outliers
 dx <- 1
 min_x <- 0
 max_x <- 0
@@ -82,14 +84,14 @@ print(sprintf("dx=%f, min_x=%f, max_x=%f, max_y=%f, landscape_length=%i", dx, mi
 tic()
  
 PLs <- list()
-PL_depth_cap <- 100
+PL_depth_cap <- 30
 max_PL_depth <- 0 # highest number of landscapes per diagram
 min_PL_depth <- Inf # lowest number of landscapes per diagram
+par(pty="s")
 for (i in 1:length(data_filenames)){ # for each sample
    #print(i)
   PLs[[i]] <- list()
   for (k in 1:npatches){
-    PLs[[i]][[k]] <- list()
     PLs[[i]][[k]] <- landscape0(PDs[[i]][[k]]$pairs[[n]], degree=1, exact=FALSE, dx=dx, min_x=min_x, max_x=max_x)
     #plot_landscape(PLs[[i]][[k]], max_y)
     #title(main=sprintf("%f file %s:", i, data_filenames[i]))
@@ -105,6 +107,93 @@ print(sprintf("min_PL_depth=%i, max_PL_depth=%i. Setting PL_depth_cap to %i", mi
 toc()
 ```
 
+
+```{r average-lanscapes-per-concentration}
+par(pty="s")
+PLs_list <- list()
+for (j in 1:ncohorts){
+  PLs_list[[j]] <- list()
+  for (c in 1:nconcentrations){
+    PLs_list[[j]][[c]] <- list()
+    for (i in 1:nimages){
+      for (k in 1:npatches){
+        PLs_list[[j]][[c]] <- append(PLs_list[[j]][[c]],PLs[[nimages*(c-1)+(j-1)*nimages*nconcentrations+i]][[k]])
+      }
+    }
+  }
+}
+
+
+PLs_avg <- list()
+for (j in 1:ncohorts){
+  if (j == 1){
+    cohort <- "Gata6" #if Gata6
+  } else {
+    cohort <- "HA" #if HA
+  }
+  PLs_avg[[j]] <- list()
+  for (c in 1:nconcentrations){
+    if (c==1){
+      concentration <- 0
+    } else if (c==2){
+      concentration <- 5
+    } else if (c==3){
+      concentration <- 15
+    } else {concentration <- 25 }
+    PL_sum <- PLs_list[[j]][[c]][[1]]
+    for (i in 2:(nimages*npatches)){
+      PL_sum <- PLsum(PL_sum, PLs_list[[j]][[c]][[i]])
+    }
+    PLs_avg[[j]][[c]]<- PLscale(1/(nimages*npatches), PL_sum)
+    #plot_landscape_levels(PLs_avg[[j]][[c]], 1, 30, max_y)
+    #title(main=sprintf("Average PL for %s concentration %1.0f",cohort,concentration)) 
+  }
+}
+```
+
+
+```{r plot-difference-in-average-landscapes-between-Gata6-and-HA}
+for (c in 1:nconcentrations){
+  par(pty="s")
+   if (c==1){
+      concentration <- 0
+    } else if (c==2){
+      concentration <- 5
+    } else if (c==3){
+      concentration <- 15
+    } else {concentration <- 25 }
+    #PLplot(PLsum(PLs_avg[[1]][[c]],PLscale(-1,PLs_avg[[2]][[c]])))
+    plot_landscape_levels(PLsum(PLs_avg[[1]][[c]],PLscale(-1,PLs_avg[[2]][[c]])), 1, PL_depth_cap)
+    title(main=sprintf("Gata6 vs HA concentration %1.0f",concentration)) 
+}
+```
+
+
+```{r plot-difference-in-average-landscapes-between-concentrations}
+for (j in 1:ncohorts){
+  par(pty="s")
+  if (j == 1){
+    cohort <- "Gata6" #if Gata6
+  } else {
+    cohort <- "HA" #if HA
+  }
+  plot_landscape_levels(PLsum(PLs_avg[[j]][[1]],PLscale(-1,PLs_avg[[j]][[2]])), 1, PL_depth_cap)
+  title(main=sprintf("%s concentration 0 vs 5",cohort)) 
+  plot_landscape_levels(PLsum(PLs_avg[[j]][[1]],PLscale(-1,PLs_avg[[j]][[3]])), 1, PL_depth_cap)
+  title(main=sprintf("%s concentration 0 vs 15",cohort)) 
+  plot_landscape_levels(PLsum(PLs_avg[[j]][[1]],PLscale(-1,PLs_avg[[j]][[4]])), 1, PL_depth_cap)
+  title(main=sprintf("%s concentration 0 vs 25",cohort)) 
+  plot_landscape_levels(PLsum(PLs_avg[[j]][[2]],PLscale(-1,PLs_avg[[j]][[3]])), 1, PL_depth_cap)
+  title(main=sprintf("%s concentration 5 vs 15",cohort)) 
+  plot_landscape_levels(PLsum(PLs_avg[[j]][[2]],PLscale(-1,PLs_avg[[j]][[4]])), 1, PL_depth_cap)
+  title(main=sprintf("%s concentration 5 vs 25",cohort)) 
+  plot_landscape_levels(PLsum(PLs_avg[[j]][[3]],PLscale(-1,PLs_avg[[j]][[4]])), 1, PL_depth_cap)
+  title(main=sprintf("%s concentration 15 vs 25",cohort)) 
+}
+
+```
+
+
 ```{r compute-average-landscapes-for-patches-and-plot-them}
 PLs_avg <- list()
 for (i in 1:length(data_filenames)){
@@ -119,95 +208,27 @@ for (i in 1:length(data_filenames)){
 
 ```
 
-```{r plot-4-patches-and-big-patch}
-index <- 1
 
-all_cells <- read.csv(file=paste0(data_file_location,data_filenames[[index]]), header=TRUE)
-#Sample 4 patches
-all_cells_patch_1 <- all_cells[which( 500 <= all_cells[,1] & all_cells[,1] < 1500 & 500 <= all_cells[,2] & all_cells[,2] < 1500),]
-all_cells_patch_2 <- all_cells[which( 1500 <= all_cells[,1] & all_cells[,1] < 2500 & 500 <= all_cells[,2] & all_cells[,2] < 1500),]
-all_cells_patch_3 <- all_cells[which( 500 <= all_cells[,1] & all_cells[,1] < 1500 & 1500 <= all_cells[,2] & all_cells[,2] < 2500),]
-all_cells_patch_4 <- all_cells[which( 1500 <= all_cells[,1] & all_cells[,1] < 2500 & 1500 <= all_cells[,2] & all_cells[,2] < 2500),]
-all_cells_patch_5 <- all_cells[which( 500 <= all_cells[,1] & all_cells[,1] < 2500 & 500 <= all_cells[,2] & all_cells[,2] < 2500),]
+```{r vectorize-landscapes}
+vectorized_PLs <- vectorize_landscapes(PLs[[1]], PL_depth_cap)
+for (i in 2:length(data_filenames)){
+  v <- vectorize_landscapes(PLs[[i]], PL_depth_cap)
+  vectorized_PLs <- rbind(vectorized_PLs, v)
+}
 
-all_cells_patch <- list(all_cells_patch_1, all_cells_patch_2, all_cells_patch_3, all_cells_patch_4, all_cells_patch_5)
-red_patch <- list()
-green_patch <- list()
-orange_patch <- list()
-blue_patch <- list()
-for (i in 1:(npatches+1)){
-  red_patch[[i]] <- all_cells_patch[[i]][ which(all_cells_patch[[i]][,8]==0 & all_cells_patch[[i]][,9]==1), ]         
-  green_patch[[i]] <- all_cells_patch[[i]][ which(all_cells_patch[[i]][,8]==1 & all_cells_patch[[i]][,9]==0), ]         
-  orange_patch[[i]] <- all_cells_patch[[i]][ which(all_cells_patch[[i]][,8]==1 & all_cells_patch[[i]][,9]==1), ]
-  blue_patch[[i]] <- all_cells_patch[[i]][ which(all_cells_patch[[i]][,8]==0 & all_cells_patch[[i]][,9]==0), ]
-  plot(red_patch[[i]][1:2],pch=19, col="darkred", cex=.1, asp=1)
-  points(green_patch[[i]][1:2],pch=19, col="darkgreen", cex=.1, asp=1)
-  points(orange_patch[[i]][1:2],pch=19, col="orange", cex=.1, asp=1)
-  points(blue_patch[[i]][1:2],pch=19, col="blue", cex=.1, asp=1)
-  title(main=sprintf("%i patch %s:", i, data_filenames[index]))
-}  
-```
-
-
-```{r average-landscapes-for-each-concentration}
-tic()
-cohorts <- "Gata6"
-conc_avg_max_y <- 0
-conc_avg_PLs <- list()
-  for (k in 1:8){
-    if (k>4) {
-      cohorts <- "HA"
-    }
-    PL_sum <- PLs[[(15*(k-1)+1)]][[1]]
-    a <- (15*(k-1)+2)
-    b <- 15*k
-   for (i in a:b){
-    PL_sum <- PLsum(PL_sum, PLs[[i]][[1]])
-   }
-    conc_avg_PLs[[k]] <- PLscale(1/nsamples, PL_sum)
-    conc_avg_max_y <- max(conc_avg_max_y, conc_avg_PLs[[k]]$getInternal()[1,,2], na.rm=TRUE)
-  
-  #Plot them 
-   print(k)
-    if (k==1 || k==5){
-   plot_landscape(conc_avg_PLs[[k]], 3100)
-   title(main=sprintf("File %s with concentration %s", cohorts, 0)) 
-    }
-    if (k==2 || k==6){
-   plot_landscape(conc_avg_PLs[[k]], 3100)
-   title(main=sprintf("File %s with concentration %s", cohorts, 5)) 
-    }
-    if (k==3 || k==7){
-   plot_landscape(conc_avg_PLs[[k]], 3100)
-   title(main=sprintf("File %s with concentration %s", cohorts, 15)) 
-    }
-    if (k==4 || k==8){
-   plot_landscape(conc_avg_PLs[[k]], 3100)
-   title(main=sprintf("File %s with concentration %s", cohorts, 25)) 
-    }
-  } 
-toc()
-```
-
-
-```{r vectorize-average-landscapes}
-vectorized_PLs <- vectorize_landscapes(PLs_avg, PL_depth_cap) 
-
-#vec_red_1 <- vectorized_PLs
-#PL_length_red <- landscape_length
-#vec_red_0 <- vectorized_PLs
-#vec_gr_1 <- vectorized_PLs
-#PL_length_gr <- landscape_length
-#vec_gr_0 <- vectorized_PLs
-#vec_pos_1 <- vectorized_PLs
-#PL_length_pos <- landscape_length
-#vec_pos_0 <- vectorized_PLs
-vec_neg_1 <- vectorized_PLs
-PL_length_neg <- landscape_length
-#vec_neg_0 <- vectorized_PLs
-#vec_gr_neg <- vectorized_PLs
-#vec_red_gr <- cbind(vec_red, vec_green)
-#vec_red_pos <- vectorized_PLs
+if (type == "red"){
+  vec_red <- vectorized_PLs
+  PL_length_red <- landscape_length
+} else if (type == "green"){
+  vec_gr <- vectorized_PLs
+  PL_length_gr <- landscape_length
+} else if (type == "double positive"){
+  vec_pos <- vectorized_PLs
+  PL_length_pos <- landscape_length
+} else{
+  vec_neg <- vectorized_PLs
+  PL_length_neg <- landscape_length
+}
 ```
 
 ```{r }
