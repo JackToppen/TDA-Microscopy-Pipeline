@@ -9,7 +9,7 @@ from backend import Image
 # segmentation paramters
 num_sizes = 10    # number sizes parameter
 min_rad_nucleus = 5    # approximate radius of the smallest cell in pixels
-max_rad_nucleus = 25    # approximate radius of the largest cell in pixels
+max_rad_nucleus = 7   # approximate radius of the largest cell in pixels
 dapi_threshold = 500    # filter out dim nuclei (for 16-bit image max is 65536, so 500 should be low enough)
 shape_channel_num = 1    # put 0 to use dapi for morphology metrics calculations
 
