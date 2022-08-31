@@ -17,15 +17,15 @@ shape_channel_num = 1    # put 0 to use dapi for morphology metrics calculations
 dpi = 600    # output image quality
 
 # specify input path for image-set and output directory
-input_path = "~/Research/TDA/R/TDA-Microscopy-Pipeline/Input/"
-output_path = "~/Research/TDA/R/TDA-Microscopy-Pipeline/Output/"
+input_path = "~/Research/TDA/R/TDA-Microscopy-Pipeline/Microscopy/"
+output_path = "~/Research/TDA/R/TDA-Microscopy-Pipeline/CSVs/"
 
 # get absolute paths for input and output directories
 input_path = abspath(expanduser(input_path))
 output_path = abspath(expanduser(output_path))
 
 # iterate through RFP types
-for rfp in ["Nanog_Gata6"]:
+for rfp in ["Nanog_Gata6", "Nanog_HA"]:
     # doxycycline concentrations
     for dox in [0, 5, 15, 25]:
         # iterate over wells/locations

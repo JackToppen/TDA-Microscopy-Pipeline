@@ -20,12 +20,12 @@ source("functions.R")
 setwd("~/Documents/Research/TDA/R/TDA-Microscopy-Pipeline")
 
 # iterate over treatment groups
-for (sig in c("Nanog_Gata6")) {
-  for (conc in c(0, 25)) {
-    for (well in c(1)) {
-      for (loc in c(1)) {
+for (sig in c("Nanog_Gata6", "Nanog_HA")) {
+  for (conc in c(0, 5, 15, 25)) {
+    for (well in c(1, 2, 3)) {
+      for (loc in c(1, 2, 3, 4, 5)) {
         # get path to microscopy CSV file
-        csv_path <- paste0("Output/",sig,"/",conc,"/",sig,"_",conc,"_",well,"_",loc,"/")
+        csv_path <- paste0("CSVs/",sig,"/",conc,"/",sig,"_",conc,"_",well,"_",loc,"/")
         csv_name <- "intensities.csv"
 
         # make new directory for storing normalized GFP/RFP values
@@ -57,27 +57,27 @@ source("functions.R")
 setwd("~/Documents/Research/TDA/R/TDA-Microscopy-Pipeline/")
 
 # hold actual values for dox concentrations and threshold percentiles
-dox <- c(0, 25)
-percs <- c(70)
+dox <- c(0, 5, 15, 25)
+percs <- c(75, 80, 85, 90, 95)
 
 # store distributions of cell types in a 2D list of 2x2 matrices
 M <- list()
-for (perc_index in c(1)) {
+for (perc_index in c(1, 2, 3, 4, 5)) {
   M[[perc_index]] <- list()
-  for (dox_index in c(1, 2)) {
+  for (dox_index in c(1, 2, 3, 4)) {
     M[[perc_index]][[dox_index]] <- matrix(rep(0,4), ncol=2)
   }
 }
 
 # iterate over treatment groups
-for (sig in c("Nanog_Gata6")) {
-  for (loc in c(1)) {
+for (sig in c("Nanog_Gata6", "Nanog_HA")) {
+  for (loc in c(1, 2, 3, 4, 5)) {
     # store location specific expression values for generating thresholds
     gfp_values <- list()
     rfp_values <- list()
     
     # load baseline CSVs for generating thresholds
-    for (well in c(1)) {
+    for (well in c(1, 2, 3)) {
       # directory path for baseline expression values
       dir_gfp <- paste0("Normalized/", sig, "/25/")
       dir_rfp <- paste0("Normalized/", sig, "/0/")
@@ -95,7 +95,7 @@ for (sig in c("Nanog_Gata6")) {
       rfp_values[[well]] <- rfp_df[, 7]
     }
     
-    for (perc_index in c(1)) {
+    for (perc_index in c(1, 2, 3, 4, 5)) {
       # get the percentile value
       perc <- percs[[perc_index]]
       
@@ -103,11 +103,11 @@ for (sig in c("Nanog_Gata6")) {
       gfp_threshold <- gen_threshold(perc, gfp_values)
       rfp_threshold <- gen_threshold(perc, rfp_values)
       
-      for (dox_index in c(1, 2)) {
+      for (dox_index in c(1, 2, 3, 4)) {
         # get dox concentration value
         conc <- dox[[dox_index]]
           
-        for (well in c(1)) {
+        for (well in c(1, 2, 3)) {
           # get path to CSV file and file name
           csv_path <- paste0("Normalized/", sig, "/", conc, "/")
           csv_name <- paste0(sig, "_", conc, "_", well, "_", loc, ".csv")
@@ -118,8 +118,8 @@ for (sig in c("Nanog_Gata6")) {
           df <- assign_color(df, show_double_low=TRUE)
           
           # get/make directory for storing discretized images and CSVs
-          disc_path_im <- paste0("Discretized-images/", perc, "/", sig, "/", conc, "/")
-          disc_path_csv <- paste0("Discretized-values/", perc, "/", sig, "/", conc, "/")
+          disc_path_im <- paste0("Discretized_Images/", perc, "/", sig, "/", conc, "/")
+          disc_path_csv <- paste0("Discretized_Values/", perc, "/", sig, "/", conc, "/")
           dir.create(disc_path_csv, recursive=TRUE, showWarnings=FALSE)
           dir.create(disc_path_im, recursive=TRUE, showWarnings=FALSE)
       
@@ -145,8 +145,8 @@ Matrices containing the distribution of cell types based on the dox treatment an
 
 ```{r}
 # iterate over treatment groups
-for (perc_index in c(1)) {
-  for (dox_index in c(1, 2)) {
+for (perc_index in c(1, 2, 3, 4, 5)) {
+  for (dox_index in c(1, 2, 3, 4)) {
     # print a header based on the dox concentration and the threshold percentile
     cat("dox: ", dox[[dox_index]], ", percentile: ", percs[[perc_index]], "\n", sep="")
     
