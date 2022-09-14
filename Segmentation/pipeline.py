@@ -15,11 +15,11 @@ from skimage.morphology import label
 
 
 # location of images to segment (directory will be searched recursively)
-input_path = "/Users/jacktoppen/Research/TDA/Microscopy_images/All/"
+input_path = "/Users/jacktoppen/Research/TDA/Microscopy_images/Test/"
 match = "merged.tif"   # search criteria for images (e.g. ".tif")
 
 # output location for segmentation CSVs
-output_path = "/Users/jacktoppen/Research/TDA/New-Segmentation/output/"
+output_path = "/Users/jacktoppen/Research/TDA/Microscopy_images/Test/"
 
 # nuclear stain position
 nuc_name = "dapi"
@@ -199,7 +199,7 @@ for path in image_paths:
     # get the DAPI intensities and generated image
     nuc_intensities, out_image = overlay_cells(nuc_channel, cells)
     out_path = os.path.join(dir_path, nuc_name + ".png")
-    plot(out_image, out_path, bit_depth)    # save the image
+    # plot(out_image, out_path, bit_depth)    # save the image
 
     # create dictionary for storing cell specific values
     data = {"X": x_pos, "Y": y_pos, nuc_name: nuc_intensities}
@@ -214,7 +214,7 @@ for path in image_paths:
         intensities, out_image = overlay_cells(channel, cells)
         data[name] = intensities
         out_path = os.path.join(dir_path, name + ".png")
-        plot(out_image, out_path, bit_depth)    # save the image
+        # plot(out_image, out_path, bit_depth)    # save the image
 
     # save cell locations and signal intensities to CSV
     df = pd.DataFrame(data)

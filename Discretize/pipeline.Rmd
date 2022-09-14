@@ -21,7 +21,7 @@ install.packages(c("ggplot2", "ggforce", "cowplot"))
 source("functions.R")
 
 # specify location path of segmented microscopy CSVs
-csv_path <- "~/Research/TDA/New-Pipeline/Data/Nanog_Gata6/1"
+csv_path <- "~/Research/TDA/Microscopy_images/Test/Nanog_HA/1"
 ```
 
 ## Normalize signals with nuclear signal
@@ -42,8 +42,8 @@ normalize(csv_path)
 percentile <- 75
 
 # specify directory paths of baseline CSVs for each threshold
-gfp_thresh_path <- "~/Research/TDA/New-Pipeline/Data/Nanog_Gata6/1/25"
-rfp_thresh_path <- "~/Research/TDA/New-Pipeline/Data/Nanog_Gata6/1/0"
+gfp_thresh_path <- "~/Research/TDA/Microscopy_images/Test/Nanog_HA/1/25"
+rfp_thresh_path <- "~/Research/TDA/Microscopy_images/Test/Nanog_HA/1/0"
 
 # generate respective channel thresholds for discretizing cell intensities
 paths <- c(gfp_thresh_path, rfp_thresh_path)    # in order as listed in segmentation CSV
@@ -52,7 +52,7 @@ thresholds <- get_thresholds(percentile, paths)
 # -------------------------------------------------------------------------------------------
 
 # specify directory paths for new (percentile-specific) discretized CSVs
-disc_path <- "~/Research/TDA/New-Pipeline/Discretized/75/Nanog_Gata6/1"
+disc_path <- "~/Research/TDA/Microscopy_images/Discretized/75/Nanog_HA/1"
 
 # generate new CSVs with discretized expression intensities
 discretize(csv_path, disc_path, thresholds)
@@ -72,8 +72,8 @@ resolution <- 1500    # width of image
 colors_path <- "cell_colors.csv"
 
 # specify path location of discretized CSVs and image output
-disc_path <- "~/Research/TDA/New-Pipeline/Discretized/75/Nanog_Gata6/1"
-image_path <- "~/Research/TDA/New-Pipeline/Images/75/Nanog_Gata6/1"
+disc_path <- "~/Research/TDA/Microscopy_images/Discretized/75/Nanog_HA/1"
+image_path <- "~/Research/TDA/Microscopy_images/Images/75/Nanog_HA/1"
 
 # generate images from discretized cell types
 generate_images(disc_path, image_path, colors_path, size, outline, resolution)

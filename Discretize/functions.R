@@ -15,12 +15,17 @@ normalize <- function(path) {
     
     # iterate through other channels
     for (col_index in 4:ncol(df)) {
-      # get new column name for normalized channel signal
+      # get column name
       channel_name <- colnames(df)[col_index]
-      norm_name <- paste0(channel_name, "_normalized")
       
-      # create new column with normalized signal (dividing by nuclear signal)
-      df[, norm_name] <- df[, col_index] / df[, 3]
+      # check that column hasn't been normalized already
+      if (!grepl("_normalized", channel_name, fixed=TRUE)) {
+        # get new column name for normalized channel signal
+        norm_name <- paste0(channel_name, "_normalized")
+        
+        # create new column with normalized signal (dividing by nuclear signal)
+        df[, norm_name] <- df[, col_index] / df[, 3]
+      }
     }
     
     # save the CSV file with normalized intensity columns
@@ -39,7 +44,7 @@ get_thresholds <- function(percentile, paths) {
   # iterate through channels
   for (i in 1:channels) {
     # read baseline CSVs used to generate thresholds
-    files <- list.files(paths[i], pattern="\\.csv$")
+    files <- list.files(paths[i], pattern="\\.csv$", include.dirs=TRUE, recursive=TRUE)
     
     # temporary variables for weighting channel threshold by number of cells
     temp_sum <- 0
