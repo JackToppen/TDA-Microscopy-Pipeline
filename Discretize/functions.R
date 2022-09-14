@@ -3,150 +3,185 @@ library(ggforce)
 library(cowplot)
 
 
-save_to_csv <- function(df, file_name) {
-  # write current data frame to a CSV file
-  write.csv(df, file_name, row.names=FALSE)
-}
-
-
-normalize <- function(df) {
-  # get the values for DAPI nuclear stain
-  dapi <- df$dapi
+normalize <- function(path) {
+  # get list of segmentation CSVs to normalize
+  files <- list.files(path, pattern="\\.csv$", include.dirs=TRUE, recursive=TRUE)
   
-  # normalize the GFP and RFP values
-  df$gfp_normalized <- df$NANOG / dapi
-  df$rfp_normalized <- df$GATA6 / dapi
-  
-  return(df)
-}
-
-
-gen_threshold <- function(percentile, baseline) {
-  # temporary variables for weighting threshold by cell numbers
-  temp_sum <- 0
-  temp_mult <- 0
-  
-  # iterate through baseline expression values
-  for (values in baseline) {
-    temp_thresh <- quantile(values, probs=percentile / 100)
-    num_cells <- length(values)
-    temp_sum <- temp_sum + num_cells
-    temp_mult <- temp_mult + num_cells * temp_thresh
-  }
-  
-  # get the weighted threshold
-  return(temp_mult / temp_sum)
-}
-
-
-discretize <- function(df, gfp_thresh, rfp_thresh) {
-  # normalize the GFP and RFP values
-  df$gfp_discrete = ifelse(df$gfp_normalized > gfp_thresh, 1, 0)
-  df$rfp_discrete = ifelse(df$rfp_normalized > rfp_thresh, 1, 0)
-  
-  return(df)
-}
-
-
-# used by mapply() in assign_color()
-colorscheme <- function(...) {
-  # get the variable number of discretized values as a list
-  discrete_values <- list(...)
-  
-  # get GFP/RFP values
-  gfp <- discrete_values[1]
-  rfp <- discrete_values[2]
-  
-  # assign colors based on the discrete GFP and RFP values
-  if (gfp == 1) {
-    if (rfp == 1) {
-      # both high
-      return("#FFFFFF")
-    } else {
-      # GFP high, RFP low
-      return("#FFB000")
+  # iterate through all files
+  for (file in files) {
+    # read the segmentation CSV to a data frame
+    csv_file <- concat_path(path, file)
+    df <- read.csv(csv_file)
+    
+    # iterate through other channels
+    for (col_index in 4:ncol(df)) {
+      # get new column name for normalized channel signal
+      channel_name <- colnames(df)[col_index]
+      norm_name <- paste0(channel_name, "_normalized")
+      
+      # create new column with normalized signal (dividing by nuclear signal)
+      df[, norm_name] <- df[, col_index] / df[, 3]
     }
-  } else {
-    if (rfp == 1) {
-      # RFP high, GFP low
-      return("#DC267F")
-    } else {
-      # both low
-      return("#785EF0")
-    }
+    
+    # save the CSV file with normalized intensity columns
+    write.csv(df, csv_file, row.names=FALSE)
   }
 }
 
 
-# used by mapply() in assign_color()
-alpha_values <- function(...) {
-  # get the variable number of discretized values as a list
-  discrete_values <- list(...)
+get_thresholds <- function(percentile, paths) {
+  # get number of channels
+  channels <- length(paths)
   
-  # get GFP/RFP values
-  gfp <- discrete_values[1]
-  rfp <- discrete_values[2]
+  # create vector for storing generated threshold for each channel
+  thresholds <- numeric(channels)
   
-  # assign alpha value based on the discrete GFP and RFP values
-  if (gfp == 1) {
-    if (rfp == 1) {
-      return(1)
-    } else {
-      return(1)
+  # iterate through channels
+  for (i in 1:channels) {
+    # read baseline CSVs used to generate thresholds
+    files <- list.files(paths[i], pattern="\\.csv$")
+    
+    # temporary variables for weighting channel threshold by number of cells
+    temp_sum <- 0
+    temp_mult <- 0
+    
+    # iterate through all files
+    for (file in files) {
+      # read the segmentation CSV to a data frame
+      csv_file <- concat_path(paths[i], file)
+      df <- read.csv(csv_file)
+      
+      # get the channel intensities
+      col_index <- ncol(df) - channels + i
+      intensities <- df[, col_index]
+      
+      # generate temp threshold to weight based on number of cells
+      temp_thresh <- quantile(intensities, probs=percentile/100)
+      num_cells <- nrow(df)
+      temp_sum <- temp_sum + num_cells
+      temp_mult <- temp_mult + num_cells * temp_thresh
     }
-  } else {
-    if (rfp == 1) {
-      return(1)
-    } else {
-      return(0)
+    
+    # get the weighted channel threshold
+    thresholds[i] <- temp_mult / temp_sum
+  }
+  
+  # return vector with each index corresponding to channel threshold
+  return(thresholds)
+}
+
+
+discretize <- function(path, disc_path, thresholds) {
+  # get number of channels
+  channels <- length(paths)
+  
+  # make output directory for discretized CSVs
+  make_dir(disc_path)
+  
+  # get list of normalized segmentation CSVs to discretize
+  files <- list.files(path, pattern="\\.csv$", include.dirs=TRUE, recursive=TRUE)
+  
+  # iterate through all files
+  for (file in files) {
+    # read the normalized segmentation CSV to a data frame
+    csv_file <- concat_path(path, file)
+    df <- read.csv(csv_file)
+    
+    # get total number of columns
+    num_cols <- ncol(df)
+    
+    # create a column for storing the cell type as a Boolean string
+    df[,"type"] <- ""
+      
+    # iterate through channels
+    for (i in 1:channels) {
+      # get index of channel column
+      col_index <- num_cols - channels + i
+      
+      # determine discretized signal and append to Boolean string
+      temp <- ifelse(df[, col_index] > thresholds[i], 1, 0)
+      df[,"type"] <- paste0(df[,"type"], temp)
     }
+    
+    # get path to new CSV and make directory for it
+    disc_file <- concat_path(disc_path, file)
+    make_dir(dirname(disc_file))
+    
+    # save the CSV file with Boolean string cell type
+    write.csv(df, disc_file, row.names=FALSE)
   }
 }
 
 
-assign_color <- function(df, show_double_low=TRUE) {
-  # apply color scheme based on GFP and RFP values
-  df$color <- mapply(colorscheme, df$gfp_discrete, df$rfp_discrete)
+generate_images <- function(disc_path, image_path, colors_csv, size, outline, resolution) {
+  # make output directory for images
+  make_dir(image_path)
   
-  # if imaging all cells
-  if (show_double_low) {
-    # set alpha value for transparency to max
-    df$show <- 1
-  } else {
-    # set transparency values for double-low to zero
-    df$show <- mapply(alpha_values, df$gfp_discrete, df$rfp_discrete)
+  # read the cell colors CSV to a data frame
+  cell_colors <- read.csv(colors_csv)
+
+  # get list of discretized CSVs to image
+  files <- list.files(disc_path, pattern="\\.csv$", include.dirs=TRUE, recursive=TRUE)
+  
+  # iterate through all files
+  for (file in files) {
+    # read the discretized CSV to a data frame
+    disc_file <- concat_path(disc_path, file)
+    df <- read.csv(disc_file)
+    
+    # create a column in the data frame for cell colors
+    df["color"] <- NA
+    
+    # map cell type to color
+    num_types <- nrow(cell_colors)
+    for (i in 1:num_types) {
+      df["color"][df["type"] == cell_colors[i,1]] <- cell_colors[i,2]
+    }
+
+    # create a scatter plot to display the cells
+    x_max <- max(df["X"])
+    y_max <- max(df["Y"])
+    ggplot(df, aes(X, Y, fill=I(color))) + 
+      geom_point(size=(size/5.9), stroke=(outline/11.8), shape=21) +
+      coord_cartesian(xlim=c(0, x_max), ylim=c(0, y_max), expand=FALSE) + 
+      labs(x=NULL, y=NULL) +
+      theme_nothing() +
+      theme(panel.background = element_rect(fill='black', color='black'))
+    
+    # convert filename from CSV to PNG
+    no_ext <- sub('\\.csv$', '', file)
+    image_local <- paste0(no_ext, ".png")
+    
+    # get path to new PNG and make directory for it
+    image_file <- concat_path(image_path, image_local)
+    make_dir(dirname(image_file))
+    
+    # convert width to inches and get height
+    width <- resolution / 300    # 300 pixels per inch default
+    height <- width * (x_max/y_max)
+    
+    # write image file
+    ggsave(image_file, width=width, height=height)
+  }
+}
+
+
+make_dir <- function(path) {
+  # check if directory exists and if not, make it
+  if (!dir.exists(path)) {
+    dir.create(path, recursive=TRUE)
+  }
+}
+
+
+concat_path <- function(path, filename) {
+  # make sure path has file separator at the end
+  n <- nchar(path)
+  if (substr(path, n, n) != .Platform$file.sep) {
+    path <- paste0(path, .Platform$file.sep)
   }
   
-  return(df)
+  # return correct joined path to file
+  return(paste0(path, filename))
 }
 
-
-save_image <- function(df, image_file) {
-  # create a scatter plot
-  ggplot(df, aes(X, Y, color=I(color), alpha=I(show))) + 
-    geom_point(size=0.1, stroke=0.5, shape=16) +
-    coord_cartesian(xlim=range(df$X), ylim=range(df$Y), expand=FALSE) + 
-    labs(x=NULL, y=NULL) +
-    theme_nothing() +
-    theme(panel.background = element_rect(fill='black', color='black'))
-  
-  # save the plot
-  ggsave(image_file, width=5, height=5)
-}
-
-
-gen_table <- function(df, gfp_thresh, rfp_thresh) {
-  # count the number of cells and get the GFP/RFP data frame columns
-  total_cells = nrow(df)
-  GFP <- df[, 6]
-  RFP <- df[, 7]
-  
-  # get the distribution of cell types
-  M00 = sum(((RFP < rfp_thresh) + (GFP < gfp_thresh)) == 2) / total_cells
-  M11 = sum(((RFP > rfp_thresh) + (GFP > gfp_thresh)) == 2) / total_cells
-  M01 = sum(((RFP < rfp_thresh) + (GFP > gfp_thresh)) == 2) / total_cells
-  M10 = sum(((RFP > rfp_thresh) + (GFP < gfp_thresh)) == 2) / total_cells
-  
-  # store values in a 2x2 matrix
-  return(matrix(c(M10, M00, M11, M01), ncol=2))
-}
