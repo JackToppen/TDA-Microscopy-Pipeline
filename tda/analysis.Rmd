@@ -18,6 +18,7 @@ knitr::opts_knit$set(root.dir="/Users/Iryna/Github/cell-patterning-project")
 library(tictoc)
 #library(tdatools)
 library(ggplot2)
+library(ggpubr)
 library(viridisLite)
 library(viridis)
 #library(rgl) #for plot3d
@@ -26,11 +27,11 @@ source("./source/intro_tda.R")
 
 
 ```{r GATA6 vs HA } 
-vectorized_PLs <- cbind(vec_red_1[, (PL_length_red*0+1):(PL_length_red*30)], vec_gr_1[,(PL_length_gr*0+1):(PL_length_gr*30)], vec_pos_1[,(PL_length_pos*0+1):(PL_length_pos*30)], vec_neg_1[,(PL_length_neg*0+1):(PL_length_neg*30)])
+vectorized_PLs <- cbind(vec_red[, (PL_length_red*0+1):(PL_length_red*30)])
 #vectorized_PLs <- vec_red_1[, (PL_length_red*0+1):(PL_length_red*30)]
 
 
-vec <- rbind(vectorized_PLs[(0*15*npatches+1):(1*15*npatches),], vectorized_PLs[(0*15*npatches+60*npatches+1):(60*npatches+1*15*npatches),])
+vec <- rbind(vectorized_PLs[(3*15*npatches+1):(4*15*npatches),], vectorized_PLs[(3*15*npatches+60*npatches+1):(60*npatches+4*15*npatches),])
 
 #vectorized_PLs <- vectorized_PLs[1:(2*npatches),]
 vec <- vec[, colSums(abs(vec)) != 0]
@@ -87,17 +88,96 @@ ggplot(pca_df, aes(x=PC2, y=PC3, col=labels))+geom_point(size=1.2)+theme_dark()+
 
 ```
 
+```{r concentrations}
+data_labels <- c(rep(1,15), rep(2,15), rep(3,15), rep(4,15), rep(1,15), rep(2,15), rep(3,15), rep(4,15))
+pca <- prcomp(vectorized_avgPLs_im[1:120,])
+pchs <- c (rep("GATA6", 60), rep("HA", 60))
+pca_df <- as.data.frame(pca$x)
+label_1 <- matrix("0 ng/ml", nrow=nimages, ncol=1)
+label_2 <- matrix("5 ng/ml", nrow=nimages, ncol=1)
+label_3 <- matrix("15 ng/ml", nrow=nimages, ncol=1)
+label_4 <- matrix("25 ng/ml", nrow=nimages, ncol=1)
+Dox_concentration <- rbind(label_1, label_2, label_3, label_4, label_1, label_2, label_3, label_4)
+other_labels <- c(1:120)
+pca_with_labels <- cbind(Dox_concentration, pchs, pca$x)
+colnames(pca_with_labels)[1] <- "Label"
+colnames(pca_with_labels)[2] <- "Symbol"
+pca_with_labels_df <- as.data.frame(pca_with_labels)
+
+ggplot(pca_df, aes(x=PC1, y=PC2, colour = Dox_concentration, shape = factor(pchs)))+geom_point(size=1.3)+theme(aspect.ratio = 1)+labs(
+         colour = "Dox concentration",
+         shape = "Group"
+        )+scale_color_discrete(breaks=c("0 ng/ml","5 ng/ml","15 ng/ml", "25 ng/ml"))
+ggplot(pca_df, aes(x=PC2, y=PC3, col=Dox_concentration))+geom_point(size=1.3)+theme(aspect.ratio = 1)
+ggplot(pca_df, aes(x=PC1, y=PC3, col=Dox_concentration))+geom_point(size=1.3)+theme(aspect.ratio = 1)
+```
+```{r G vs HA 25 concentration}
+data_labels <- c(rep(1,15), rep(2,15))
+pca <- prcomp(rbind(vec_red[46:60,], vec_red[106:120,]))
+pca_df <- as.data.frame(pca$x)
+label_1 <- matrix("GATA6", nrow=nimages, ncol=1)
+label_2 <- matrix("HA", nrow=nimages, ncol=1)
+Labels <- rbind(label_1, label_2)
+other_labels <- rbind(c(46:60),c(106:120))
+pca_with_labels <- cbind(labels, pca$x)
+colnames(pca_with_labels)[1] <- "Label"
+pca_with_labels_df <- as.data.frame(pca_with_labels)
+
+ggplot(pca_df, aes(x=PC1, y=PC2, col=Labels))+geom_point(size=1.4)+theme(aspect.ratio = 1)
+ggplot(pca_df, aes(x=PC2, y=PC3, col=Labels))+geom_point(size=1.4)+theme(aspect.ratio = 1)
+ggplot(pca_df, aes(x=PC1, y=PC3, col=Labels))+geom_point(size=1.4)+theme(aspect.ratio = 1)
+```
+```{r multidimensional scaling}
+
+d <- dist(rbind(vec_red[46:60,], vec_red[106:120,])) # euclidean distances between the rows
+mds <- cmdscale(d,eig=TRUE, k=2) # k is the number of dim
+label_1 <- matrix("GATA6", nrow=nimages, ncol=1)
+label_2 <- matrix("HA", nrow=nimages, ncol=1)
+Labels <- rbind(label_1, label_2)
+
+# plot solution 
+ggplot(as.data.frame(mds$points), aes(x=x, y=y, col=Labels))+geom_point(size=1.4)+theme(aspect.ratio = 1)
+#points(cohort_distances_mds$points, col="black", pch=c(8,cohort_outline_pch), bty="n", ann=FALSE)
+```
+
+```{r 15 vs 25}
+data_labels <- c(rep(1,15), rep(2,15), rep(1,15), rep(2,15))
+pca <- prcomp(rbind(vectorized_avgPLs[31:60,], vectorized_avgPLs[91:120,]))
+pchs <- c (rep("GATA6", 30), rep("HA", 30))
+pca_df <- as.data.frame(pca$x)
+label_3 <- matrix("15 ng/ml", nrow=nimages, ncol=1)
+label_4 <- matrix("25 ng/ml", nrow=nimages, ncol=1)
+Dox_concentration <- rbind(label_3, label_4, label_3, label_4)
+pca_with_labels <- cbind(Dox_concentration, pchs, pca$x)
+colnames(pca_with_labels)[1] <- "Label"
+colnames(pca_with_labels)[2] <- "Symbol"
+pca_with_labels_df <- as.data.frame(pca_with_labels)
+
+ggplot(pca_df, aes(x=PC1, y=PC2, colour = Dox_concentration, shape = factor(pchs)))+geom_point(size=1.3)+theme(aspect.ratio = 1)+labs(
+         colour = "Dox concentration",
+         shape = "Group"
+        )+scale_color_discrete(breaks=c("15 ng/ml", "25 ng/ml"))
+ggplot(pca_df, aes(x=PC2, y=PC3, col=Dox_concentration))+geom_point(size=1.3)+theme(aspect.ratio = 1)
+ggplot(pca_df, aes(x=PC1, y=PC3, col=Dox_concentration))+geom_point(size=1.3)+theme(aspect.ratio = 1)
+```
+
+
 
 ```{r permutation test, eval=FALSE}
-vectorized_PLs <- vec_neg[,1:(PL_length_neg*30)]
+vectorized_PLs <- vec_gr[,1:(PL_length_gr*30)]
+#vectorized_PLs <- vectorized_PLs[, colSums(abs(vectorized_PLs)) != 0]
+#vectorized_PLs <- scale(vectorized_PLs)
+#vectorized_PLs <- rbind(cbind(counts[[1]][,1],counts[[1]][,3]),cbind( counts[[2]][,1],counts[[2]][,3]))
+
+#vectorized_PLs <- vec_red[, (PL_length_red*0+1):(PL_length_red*30)] #30 is PL_depth_cap
 #vectorized_PLs <- vectorized_PLs[, colSums(abs(vectorized_PLs)) != 0]
 #vectorized_PLs <- scale(vectorized_PLs)
 
-#vectorized_PLs <- cbind(vec_red[(1+n*(1-j)):(n+n*(1-j)), (PL_length_red*0+1):(PL_length_red*30)], vec_gr[(1+n*(1-j)):(n+n*(1-j)),(PL_length_gr*0+1):(PL_length_gr*30)], vec_pos[(1+n*(1-j)):(n+n*(1-j)), (PL_length_pos*0+1):(PL_length_pos*30)], vec_neg[(1+n*(1-j)):(n+n*(1-j)), (PL_length_neg*0+1):(PL_length_neg*30)])  #30 is PL_depth_cap
 nrepeats <- 10000
 print("Permutation test results:")
-#p_value <- permutation.test(vectorized_PLs[(0*nimages*npatches+1):(1*nimages*npatches), ],   vectorized_PLs[(0*nimages*npatches+1+4*nimages*npatches):(1*nimages*npatches+4*nimages*npatches), ], num.repeats = nrepeats)
-p_value <- permutation.test(vectorized_PLs[(1*nsamples+1):(2*nsamples),], vectorized_PLs[(3*nsamples+1):(4*nsamples),], num.repeats = nrepeats)
+p_value <- permutation.test(vectorized_PLs[(3*nimages*npatches+1):(3*nimages*npatches),],  vectorized_PLs[(3*nimages*npatches+1+4*nimages*npatches):(4*nimages*npatches+4*nimages*npatches),])
+#p_value <- permutation.test(vectorized_PLs[(3*nimages*npatches+1):(4*nimages*npatches), ],   vectorized_PLs[(3*nimages*npatches+1+4*nimages*npatches):(4*nimages*npatches+4*nimages*npatches), ], num.repeats = nrepeats)
+#p_value <- permutation.test(vectorized_PLs[(1*nsamples+1):(2*nsamples),], vectorized_PLs[(3*nsamples+1):(4*nsamples),])
 print(sprintf("p-value %f:", p_value))
 ```
 
@@ -199,6 +279,7 @@ table(unlist(predictions),data_labels_permuted)
 ```
 
 ```{r multiclass-SVM}
+tic()
 cohort <- "Gata6"
 if (cohort == "Gata6"){
   j <- 1 #if Gata6
@@ -207,14 +288,13 @@ if (cohort == "Gata6"){
 }
 print(cohort)
 cost <- 10
-nrepeats <- 10
+nrepeats <- 20
 num_folds <- 10
 n <- nsamples*nconcentrations #number of patches per cohort
 ntest_data <- n/num_folds
 data_labels <- matrix(c(rep(0,nsamples), rep(5,nsamples), rep(15,nsamples), rep(25,nsamples)))
 #vectorized_PLs <- scale(counts[[2]])
-#vectorized_PLs <-cbind(vec_red_1[61:(2*n), (PL_length_red*3+1):(PL_length_red*30)], vec_gr_1[61:(2*n),(PL_length_gr*3+1):(PL_length_gr*30)],vec_pos_1[61:(2*n),(PL_length_pos*3+1):(PL_length_pos*30)], vec_neg_1[61:(2*n),(PL_length_neg*3+1):(PL_length_neg*30)])
-vectorized_PLs <- cbind(vec_red[(1+n*(1-j)):(n+n*(1-j)), (PL_length_red*0+1):(PL_length_red*30)], vec_gr[(1+n*(1-j)):(n+n*(1-j)),(PL_length_gr*0+1):(PL_length_gr*30)],vec_pos[(1+n*(1-j)):(n+n*(1-j)),(PL_length_pos*0+1):(PL_length_pos*30)], vec_neg[(1+n*(1-j)):(n+n*(1-j)),(PL_length_neg*0+1):(PL_length_neg*30)])  #30 is PL_depth_cap
+vectorized_PLs <- cbind(vec_red[(1+n*(1-j)):(n+n*(1-j)), (PL_length_red*0+1):(PL_length_red*30)], vec_gr[(1+n*(1-j)):(n+n*(1-j)),(PL_length_gr*0+1):(PL_length_gr*30)],vec_pos[(1+n*(1-j)):(n+n*(1-j)),(PL_length_pos*0+1):(PL_length_pos*30)], vec_neg[(1+n*(1-j)):(n+n*(1-j)),(PL_length_neg*0+1):(PL_length_neg*30)]) #30 is PL_depth_cap
 vectorized_PLs <- vectorized_PLs[, colSums(abs(vectorized_PLs)) != 0]
 vectorized_PLs <- scale(vectorized_PLs)
 
@@ -222,6 +302,7 @@ vectorized_PLs <- scale(vectorized_PLs)
 accuracy <- list()
 total_accuracy <- 0
 for (k in 1:nrepeats){
+  print(k)
   rand_perm <- sample(n)
   vectorized_PLs_permuted <- vectorized_PLs[rand_perm,]
   data_labels_permuted <- data_labels[rand_perm]
@@ -251,10 +332,12 @@ for (k in 1:nrepeats){
 
 total_accuracy <- total_accuracy/nrepeats
 print(total_accuracy)
+toc()
 ```
 
 ```{r SVR}
-cohort <- "Gata6"
+tic()
+cohort <- "HA"
 if (cohort == "Gata6"){
   j <- 1 #if Gata6
 } else {
@@ -262,7 +345,7 @@ if (cohort == "Gata6"){
 }
 print(cohort)
 cost <- 10
-nrepeats <- 10
+nrepeats <- 20
 num_folds <- 10
 n <- nsamples*nconcentrations #number of patches per cohort
 ntest_data <- n/num_folds
@@ -274,6 +357,7 @@ vectorized_PLs <- scale(vectorized_PLs)
 data_labels <- c(rep(0,nsamples),rep(5,nsamples),rep(15,nsamples),rep(25,nsamples))
 predictions_list <- list()
 for (k in 1:nrepeats){
+  print(k)
   rand_perm <- sample(n)
   perm_inv <- invPerm(rand_perm)
   vectorized_PLs_permuted <- vectorized_PLs[rand_perm,]
@@ -281,7 +365,7 @@ for (k in 1:nrepeats){
   svr_model <- list()
   predictions_svr <- list()
   for (i in 1:num_folds){
-    svr_model[[i]] <- ksvm(vectorized_PLs_permuted[-((ntest_data*(i-1) + 1):(ntest_data*(i-1)+ntest_data)),],data_labels_permuted[-((ntest_data*(i-1) + 1):(ntest_data*(i-1)+ntest_data))],scaled  = FALSE ,kernel="vanilladot",C = cost,epsilon = .01)
+    svr_model[[i]] <- ksvm(vectorized_PLs_permuted[-((ntest_data*(i-1) + 1):(ntest_data*(i-1)+ntest_data)),],data_labels_permuted[-((ntest_data*(i-1) + 1):(ntest_data*(i-1)+ntest_data))],scaled  = FALSE ,kernel="vanilladot",C = cost,epsilon = 0.01)
     predictions_svr[[i]] <- predict(svr_model[[i]],vectorized_PLs_permuted[((ntest_data*(i-1) + 1):(ntest_data*(i-1)+ntest_data)),])
   }
   predictions_list[[k]] <- unlist(predictions_svr)[perm_inv]
@@ -292,12 +376,13 @@ for (k in 1:nrepeats){
   prediction = rbind(prediction,predictions_list[[k]])
 }
 prediction = colSums(prediction)/nrepeats
+toc()
 ```
 
 
 ```{r plot-SVR-patches}
 plot(prediction)
-c <- c("aquamarine3", "yellow","lightblue", "orange")
+c <- c("aquamarine3", "yellow","lightskyblue2", "orange")
 symbols <- c(21:24)
 plot(0, col="white", bty="o", xlim=c(1,n), ylim=c(min(prediction),max(prediction)), ylab="estimated dox concentration", xlab="patches")
 #grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted",
@@ -314,21 +399,35 @@ legend("topleft", cex=0.8, inset=0.01, legend=c("0", "5", "15", "25"),
 data <- data.frame(labels=c(rep(0,nsamples),rep(5,nsamples),rep(15,nsamples),rep(25,nsamples)), values =c(prediction[1:nsamples], prediction[(nsamples+1):(2*nsamples)], prediction[(2*nsamples+1):(3*nsamples)], prediction[(3*nsamples+1):(4*nsamples)]))
 
 
-
-boxplot(data$values ~ data$labels, col=c, xlab="images", ylab="predicted concentration")
-#stripchart(data$values ~ data$labels, vertical=TRUE, method="jitter", pch=19,add=TRUE, col=1:4, jitter=0.3)
+boxplot(data$values ~ data$labels, col=c, xlab="concentration", ylab="predicted concentration")
+stripchart(data$values ~ data$labels, vertical=TRUE, method="jitter", pch=19,add=TRUE, col=1:4, jitter=0.3)
 grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted",
      lwd = par("lwd"), equilogs = TRUE)
 
 ```
 
+```{r SVR patches ggplot}
+concentration <- c(rep("0",nsamples),rep("5",nsamples),rep("15",nsamples),rep("25",nsamples))
+value <- c( unlist(prediction) )
+data <- data.frame(concentration, value)
+#new_data <- data
+#new_data$concentration <- factor(data$concentration , levels=c("0", "5", "15", "25"))
+
+
+ggplot(data, aes(x=concentration, y=value, fill=concentration)) +scale_x_discrete(limits=c("0", "5", "15", "25"))+
+    geom_boxplot(alpha=0.4)  +
+    theme(
+      plot.title = element_text(size=11), aspect.ratio=1)+
+    xlab("")+ylab("predicted Dox concentration")+labs(title="RFP = HA")+theme(plot.title=element_text(hjust=0.5))+coord_cartesian(ylim=c(-25,45))+scale_y_continuous(breaks = c(-5, 0, 5, 10,15,20,25,30))+scale_fill_discrete(breaks=c('0', '5', '15', '25'))
+```
+
 ```{r plot-SVR-images}
 prediction_images <- vector()
 for (i in 1:(nimages*nconcentrations)){
-  prediction_images[i] <- mean(sort(prediction[((i-1)*npatches+1):(i*npatches)])[6:11])
+  prediction_images[i] <- mean(sort(prediction[((i-1)*npatches+1):(i*npatches)]))
 }
 data_labels <- c(rep(0,nimages),rep(5,nimages),rep(15,nimages),rep(25,nimages))
-c <- c("aquamarine3", "yellow","lightblue", "orange")
+c <- c("aquamarine3", "yellow","lightskyblue2", "orange")
 symbols <- c(21:24)
 plot(0, col="white", bty="o", xlim=c(1,nimages*nconcentrations), ylim=c(min(prediction_images),max(prediction_images)), ylab="estimated dox concentration", xlab="images")
 grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted",
@@ -346,9 +445,51 @@ data <- data.frame(labels=c(rep(0,nimages),rep(5,nimages),rep(15,nimages),rep(25
 
 
 
-boxplot(data$values ~ data$labels, col=c, xlab="images", ylab="predicted concentration")
+boxplot(data$values ~ data$labels, col=c, xlab="concentration", ylab="predicted Dox concentration", ylim=c(-5,30))
 grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted",
      lwd = par("lwd"), equilogs = TRUE)
 stripchart(data$values ~ data$labels, vertical=TRUE, method="jitter", pch=19, col='black', add=TRUE, jitter=0.3, cex=0.9)
 
 ```
+
+```{r plot-SVR-images-ggplot}
+prediction_images <- vector()
+for (i in 1:(nimages*nconcentrations)){
+  prediction_images[i] <- mean(sort(prediction[((i-1)*npatches+1):(i*npatches)]))
+}
+
+concentration <- c(rep("0",nimages),rep("5",nimages),rep("15",nimages),rep("25",nimages))
+value <- c( unlist(prediction_images) )
+data <- data.frame(concentration, value)
+#new_data <- data
+#new_data$concentration <- factor(data$concentration , levels=c("0", "5", "15", "25"))
+
+
+SVR_H_mean <- ggplot(data, aes(x=concentration, y=value, fill=concentration)) +scale_x_discrete(limits=c("0", "5", "15", "25"))+
+    geom_boxplot(alpha=0.4)  +
+    geom_jitter(color="black", size=0.7, alpha=0.9)+
+    theme(
+      plot.title = element_text(size=11), aspect.ratio=1)+
+    xlab("")+ylab("predicted Dox concentration")+coord_cartesian(ylim=c(0,28))+scale_y_continuous(breaks = c(-5, 0, 5, 10,15,20,25,30))+scale_fill_discrete(breaks=c('0', '5', '15', '25'))+guides(fill=guide_legend(title="Dox concentration"))
+```
+
+```{r }
+################for knn computations 
+#SVR_G_mean 
+#SVR_G_med
+#SVR_H_mean 
+#SVR_H_med
+###############
+#SVR_G_med
+#SVR_G_mean
+#SVR_G_mean6_11
+#SVR_G_med_sc0_30
+#SVR_G_mean_sc0_30
+#SVR_G_mean_6_11_sc0_30
+ggarrange(SVR_G_med, SVR_H_med, nrow=1,common.legend = TRUE, legend = "bottom")
+ggarrange(SVR_G_mean, SVR_H_mean, nrow=1,common.legend = TRUE, legend = "bottom")
+#ggarrange(SVR_G_med_sc0_30, SVR_H_med_sc0_30, nrow=1,common.legend = TRUE, legend = "right")
+#ggarrange(SVR_G_med, SVR_H_med, nrow=1,common.legend = TRUE, legend = "bottom")
+
+```
+

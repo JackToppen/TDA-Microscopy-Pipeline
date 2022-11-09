@@ -4,11 +4,32 @@
 # new way of plotting with specified maximum y value and no labels
 # code edited from original tda-tools code by Jose Bouza
 
+
+plot_diagram <- function(PersistenceDiagram, sc1, sc2, sc3){
+  finite <- matrix(PersistenceDiagram[PersistenceDiagram[,2] != Inf], ncol=2)
+  infinite <- matrix(PersistenceDiagram[PersistenceDiagram[,2] == Inf], ncol=2)
+  max = 0
+  
+  if(dim(finite)[1] > 0){
+    max = rep(max(finite), dim(infinite)[1])
+    min_z = min(finite)
+    max_z = max(finite)
+    plot(NULL, xlim=c(0,80), ylim=c(0,80),  ylab="", xlab="", bty="o")
+    abline(0,1)
+    #grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted",
+    #lwd = par("lwd"), equilogs = TRUE)
+    for (i in 1:length(finite[,1])){
+      points(finite[i,1], finite[i,2], col='orange', pch=20, cex=0.8)
+    }
+   
+  }
+}
+
+
 plot_landscape_internal <- function(internal, y_max, y_min=0){
   infinity_sub=-1
   line_width <- 1
-  # colors <- colorRamp(c("red", "blue"), numLevels(internal)) # outputs a function
-  # colors <- myColorRamp(c("red", "blue"), numLevels(internal)) # outputs a vector
+
   colors <- c(1:numLevels(internal)) # outputs a vector
   
   for(level in 1:numLevels(internal)){
@@ -44,34 +65,40 @@ plot_landscape <- function(PersistenceLandscape, y_max){
 plot_landscape_internal_levels <- function(internal, l1, l2, y_max, y_min=0){
   infinity_sub=-1
   line_width <- 1
-   mycolors <- rep(c("midnightblue","slateblue", "royalblue2", "deepskyblue4", "deepskyblue3",
+  mycolors <- rep(c("midnightblue","slateblue", "royalblue2", "deepskyblue4", "deepskyblue3",
                          "turquoise4", "chartreuse4","olivedrab4", "olivedrab3", "yellowgreen", 
-                     "yellow3","gold3", "gold2","gold1", "gold" ), 2) # outputs a function
-  # colors <- myColorRamp(c("red", "blue"), numLevels(internal)) # outputs a vector
-  #colors <- c(l1:l2) # outputs a vector
-    #"gold3", "goldenrod", "tan2", "tan1"
-  for(level in l1:l2){
+                     "yellow3","gold3", "gold2","gold1", "gold" ), 2)
+  
+  for(level in 1:numLevels(internal)){
     level_d <- accessLevel(internal,level)
     if(infinity_sub != -1){
       level_d[level_d == Inf] <- infinity_sub
       level_d[level_d == -Inf] <- -infinity_sub
     }
   }
+  
   level1 <- accessLevel(internal,l1)
   
-  # plot first level
-  if (missing(y_max)){ # plot as usual
-    plot(level1[,1],level1[,2], type='l', xlab='', ylab='',  col=mycolors[1], lwd=line_width)
-  } else { # specify limits of y axis
-    plot(level1[,1],level1[,2], type='l', ann=FALSE, col=mycolors[1], lwd=line_width, ylim=c(y_min,y_max))#viridis(numLevels(internal))
+
+  if (l1 >= numLevels(internal)){
+    plot(0, xlab='', ylab='',  bty="o", col=mycolors[1], lwd=line_width, ylim=c(0,0.5), xlim=c(0,4))
+  } else if (missing(y_max) & l1 < numLevels(internal)){ # plot as usual
+    plot(level1[,1],level1[,2], type='l', xlab='', ylab='', bty="o", col=mycolors[1], lwd=line_width, ylim=c(0,0.5), xlim=c(0,4))
+  } else if (l1 < numLevels(internal)){ # specify limits of y axis
+    plot(level1[,1],level1[,2], type='l', ann=FALSE, bty="o",col=mycolors[1], lwd=line_width, ylim=c(0,0.5), xlim=c(0,4))#viridis(numLevels(internal))
   }
-  
-  if( l2>l1){
-    for(level in (l1+1):l2){
+
+  if(l1 < numLevels(internal) & l2 <= numLevels(internal)){
+    for(level in l1:l2){
       level_d <- accessLevel(internal,level)
-      lines(level_d[,1], level_d[,2], col=mycolors[level], lwd=line_width)
+      lines(level_d[,1], level_d[,2], col=mycolors[level %% 15], lwd=line_width)
     }
-    
+  } 
+  if(l1 < numLevels(internal) & l2 >= numLevels(internal)){
+    for(level in l1:numLevels(internal)){
+      level_d <- accessLevel(internal,level)
+      lines(level_d[,1], level_d[,2], col=mycolors[level %% 15], lwd=line_width)
+    }
   }
 }
 
@@ -133,6 +160,40 @@ landscape0 <- function(data, degree, exact=FALSE, dx, min_x, max_x){
     tdatools::landscape(matrix(0, nrow=1,ncol=2), degree=degree, exact=exact, dx=dx, min_x=min_x, max_x=max_x)
   } else {
     tdatools::landscape(data, degree=degree, exact=exact, dx=dx, min_x=min_x, max_x=max_x)
+  }
+}
+
+
+vector_to_landscape_data_array <- function(vec, min_x, max_x, dx){
+  
+  landscape_length <- ceiling((max_x-min_x)/dx)
+  x_vec <- (((1:landscape_length)-1)*dx)+min_x
+  
+  max_depth <- length(vec)/landscape_length
+  data_array <- array(dim=c(max_depth, landscape_length, 2))
+  data_array[,,2] <- matrix(vec, byrow=TRUE, ncol=landscape_length)
+  data_array[,,1] <- rep(1,max_depth) %*% t(x_vec)
+  
+  return(data_array)
+}
+
+# overloading plot_landscape so it can be used with either a landscape objects
+# (which is a c++ object) or the data array within it, called the ``internal''
+plot_landscape_data_array <- function(data_array, y_max, y_min=0){
+  mycolors <- rep(c("midnightblue","slateblue", "royalblue2", "deepskyblue4", "deepskyblue3",
+                    "turquoise4", "chartreuse4","olivedrab4", "olivedrab3", "yellowgreen", 
+                    "yellow3","gold3", "gold2","gold1", "gold" ), 2)
+  for (depth in 1:numLevels(data_array)){
+    mountain <- accessLevel(data_array, depth)
+    if (depth == 1) {
+      if (missing(y_max)){
+        plot(mountain, type='l', xlab='', ylab='', bty="o", col=mycolors[1])
+      } else {
+        plot(mountain, type='l', xlab='', ylab='', bty="o", col=mycolors[1], ylim=c(y_min,y_max))
+      }
+    } else {
+      lines(mountain, col=mycolors[depth %% 15])
+    }
   }
 }
 
