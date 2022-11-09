@@ -6,13 +6,11 @@
 library(tdatools)
 library(TDA)
 library(tictoc)
-#library(rdist)
 library(FNN)
 
 tic()
 source("config.R")
-source("source/intro_tda.R")
-source("source/landscape_utilities.R")
+source("utilities.R")
 save_computations <- TRUE
 
 # moved these into the config file
@@ -126,13 +124,13 @@ if (save_computations){
        #SVR_H_med_sc0_30,
        #SVR_H_mean_sc0_30,
        #SVR_H_mean_6_11_sc0_30,
-       SVR_G_mean,
-       SVR_G_med,
-       SVR_H_mean, 
-       SVR_H_med,
+       #SVR_G_mean,
+       #SVR_G_med,
+       #SVR_H_mean, 
+       #SVR_H_med,
        #vec_red, PL_length_red, vec_gr, PL_length_gr, vec_pos, PL_length_pos, vec_neg, PL_length_neg,
        #vec_gr, vec_pos, vec_neg, PL_length_gr, PL_length_pos, PL_length_neg,
-    #PDs_red,PDs_green, PDs_pos, PDs_neg,
+    PDs_red,PDs_green, PDs_pos, PDs_neg,
     README, 
     file=paste0(save_file_location,save_filename))
   print(sprintf("finished computations saved to %s%s", save_file_location, save_filename))
