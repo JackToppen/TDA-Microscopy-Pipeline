@@ -1,10 +1,12 @@
 #Ashleigh Thomas, Iryna Hartsock
-# function to plot landscapes differently from tda-tools
-# input can contain ...
-# new way of plotting with specified maximum y value and no labels
-# code edited from original tda-tools code by Jose Bouza
 
+#some code is edited from original tda-tools code by Jose Bouza
+#some code is edited from Introduction to Topological Data Analysis with R by Peter Bubenik
 
+# Euclidean distance between vectors 
+euclidean.distance <- function(u, v) sqrt(sum((u - v) ^ 2))
+
+#plot diagrams (edited code from tda-tools)
 plot_diagram <- function(PersistenceDiagram, sc1, sc2, sc3){
   finite <- matrix(PersistenceDiagram[PersistenceDiagram[,2] != Inf], ncol=2)
   infinite <- matrix(PersistenceDiagram[PersistenceDiagram[,2] == Inf], ncol=2)
@@ -25,43 +27,7 @@ plot_diagram <- function(PersistenceDiagram, sc1, sc2, sc3){
   }
 }
 
-
-plot_landscape_internal <- function(internal, y_max, y_min=0){
-  infinity_sub=-1
-  line_width <- 1
-
-  colors <- c(1:numLevels(internal)) # outputs a vector
-  
-  for(level in 1:numLevels(internal)){
-    level_d <- accessLevel(internal,level)
-    if(infinity_sub != -1){
-      level_d[level_d == Inf] <- infinity_sub
-      level_d[level_d == -Inf] <- -infinity_sub
-    }
-  }
-  level1 <- accessLevel(internal,1)
-  
-  # plot first level
-  if (missing(y_max)){ # plot as usual
-    plot(level1[,1],level1[,2], type='l', xlab='', ylab='', bty="n", col=plasma(1), lwd=line_width)
-  } else { # specify limits of y axis
-    plot(level1[,1],level1[,2], type='l', ann=FALSE, bty="n", col=plasma(1), lwd=line_width, ylim=c(y_min,y_max))#viridis(numLevels(internal))
-  }
-  
-  if(numLevels(internal) > 1){
-    for(level in 2:numLevels(internal)){
-      level_d <- accessLevel(internal,level)
-      lines(level_d[,1], level_d[,2], col=plasma(15)[level %% 15], lwd=line_width)
-    }
-  }
-}
-
-plot_landscape <- function(PersistenceLandscape, y_max){
-  internal <- PersistenceLandscape$getInternal()
-  plot_landscape_internal(internal, y_max)
-}
-
-
+#plot landscapes using color scheme (edited code from tda-tools)
 plot_landscape_internal_levels <- function(internal, l1, l2, y_max, y_min=0){
   infinity_sub=-1
   line_width <- 1
@@ -102,14 +68,14 @@ plot_landscape_internal_levels <- function(internal, l1, l2, y_max, y_min=0){
   }
 }
 
-#plot certain landscapes' levels
+#plot landscapes' levels from l1 to l2
 plot_landscape_levels <- function(PersistenceLandscape, l1, l2, y_max){
   internal <- PersistenceLandscape$getInternal()
   plot_landscape_internal_levels(internal, l1, l2, y_max)
 }
 
 
-
+#computes maximum height of a persistence landscape
 get_landscape_y_max <- function(PersistenceLandscape){
   y_max <- 0
   internal <- PersistenceLandscape$getInternal()
@@ -122,7 +88,7 @@ get_landscape_y_max <- function(PersistenceLandscape){
   return(y_max)
 }
 
-
+#persistence landscapes as a single vector
 vectorize_landscapes <- function(PL_list, depth_cap=0){
   # input: list of landscapes, highest depth of landscape to include in vector
   # landscape data is a collection of (x,y) points that approximate 
@@ -234,3 +200,36 @@ gudhi2tdatools <- function(gudhi_dgm) {
   
   return(tdatools_dgm)
 }
+
+#permutation test (code edited from Peter Bubenik's Introduction to Topological Data Analysis with R )
+permutation_test <- function(group1, group2, nrepeats = 10000){
+  if (class(group1)=="integer" | class(group1)=="numeric"){
+    M <- c(group1, group2)
+    n <- length(M) # number of total data points
+    k <- length(group1) # number of data points in first group
+    observation <- euclidean.distance(mean(group1),mean(group2))
+    ngreater_distances <- 0
+    for (i in 1:nrepeats){
+      permutation <- sample(1:n)
+      distance <- euclidean.distance(mean(M[permutation[1:k]]),mean(M[permutation[(k+1):n]]))
+      if (distance >= observation)
+        ngreater_distances <- ngreater_distances + 1
+    }
+    return(ngreater_distances/nrepeats)
+    break
+  } else{
+    M <- rbind(group1, group2)
+    n <- nrow(M) # number of total data points
+    k <- nrow(group1) # number of data points in first group
+    observation <- euclidean.distance(colMeans(group1),colMeans(group2))
+    ngreater_distances <- 0
+    for (i in 1:nrepeats){
+      permutation <- sample(1:n)
+      distance <- euclidean.distance(colMeans(M[permutation[1:k],]),colMeans(M[permutation[(k+1):n],]))
+      if (distance >= observation)
+        ngreater_distances <- ngreater_distances + 1
+    }
+    return(ngreater_distances/nrepeats)
+  }
+}
+

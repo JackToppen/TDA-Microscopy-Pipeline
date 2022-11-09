@@ -7,8 +7,7 @@ library(tictoc)
 
 tic()
 source("config.R")
-source("source/intro_tda.R")
-source("source/landscape_utilities.R")
+source("utilities.R")
 save_computations <- TRUE
 
 # moved these into the config file

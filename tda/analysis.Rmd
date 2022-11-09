@@ -16,13 +16,11 @@ knitr::opts_knit$set(root.dir="/Users/Iryna/Github/cell-patterning-project")
 ```
 ```{r libraries, message=FALSE}
 library(tictoc)
-#library(tdatools)
 library(ggplot2)
 library(ggpubr)
-library(viridisLite)
-library(viridis)
-#library(rgl) #for plot3d
-source("./source/intro_tda.R")
+#library(viridisLite)
+#library(viridis)
+source("utilities.R")
 ```
 
 
