@@ -15,13 +15,14 @@ ncohorts <- length(cohorts)
 nimages <- 15 #number of images per concentration
 npatches <- 16 #number of patches per image
 nsamples <- nimages*npatches #number of samples per concentration 
-
+nwells <- 3
+npositions <- 5
 
 files <- list()
 for (j in cohorts){
   for (c in concentrations){ # gata6
-    for (w in 1:3){
-      for (p in 1:5){
+    for (w in 1:nwells){
+      for (p in 1:npositions){
         files <- append(files, paste0(percentile,"/Nanog_", j,"/", p, "/", c,"/Nanog_",j, "_",c,"_", w, "_", p))
       }
     }
