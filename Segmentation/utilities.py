@@ -14,24 +14,6 @@ from skimage.segmentation import watershed
 from skimage.morphology import label
 
 
-# location of images to segment (directory will be searched recursively)
-input_path = "/Users/jacktoppen/Research/TDA/Microscopy_images/Test/"
-match = "merged.tif"   # search criteria for images (e.g. ".tif")
-
-# output location for segmentation CSVs
-output_path = "/Users/jacktoppen/Research/TDA/Microscopy_images/Test/"
-
-# nuclear stain position
-nuc_name = "dapi"
-nuc_index = 2
-
-# indicate channels (beyond cell nuclei stain) and their channel positions
-channels = {"gfp": 1, "rfp": 0}
-
-
-bit_depth = 16    # change to 8 if your image intensity maximum is 255
-
-
 def get_images(path, match):
     """ Returns a list of file names after searching
         a directory recursively with search criteria.
@@ -172,51 +154,4 @@ def plot(image, name, bits=0):
     plt.colorbar(image, cmap='jet')
     plt.savefig(name,dpi=dpi,bbox_inches = "tight")
     plt.close()
-
-
-# get all images in input directory
-image_paths = get_images(input_path, match)
-
-# run the segmentation calculation on each image
-for path in image_paths:
-    # read the image
-    image = tifffile.imread(input_path + path)
-
-    # get the nuclear stain channel and segmen the image based on this
-    nuc_channel = image[nuc_index]
-    nuc_seg = segmentation(nuc_channel)
-
-    # create path to CSV file
-    csv_path = output_path + os.path.splitext(path)[0] + ".csv"
-
-    # make sure directories exist for CSV file
-    dir_path = os.path.split(csv_path)[0]
-    os.makedirs(dir_path, exist_ok=True)
-
-    # return the detected objects that are identified as cells
-    x_pos, y_pos, cells = identify_cells(nuc_seg)
-
-    # get the DAPI intensities and generated image
-    nuc_intensities, out_image = overlay_cells(nuc_channel, cells)
-    out_path = os.path.join(dir_path, nuc_name + ".png")
-    # plot(out_image, out_path, bit_depth)    # save the image
-
-    # create dictionary for storing cell specific values
-    data = {"X": x_pos, "Y": y_pos, nuc_name: nuc_intensities}
-
-    # iterate through the channels, quantifying signal in each
-    for name in channels.keys():
-        # get expression channel from image
-        index = channels[name]
-        channel = image[index]
-
-        # calculate intensities
-        intensities, out_image = overlay_cells(channel, cells)
-        data[name] = intensities
-        out_path = os.path.join(dir_path, name + ".png")
-        # plot(out_image, out_path, bit_depth)    # save the image
-
-    # save cell locations and signal intensities to CSV
-    df = pd.DataFrame(data)
-    df.to_csv(csv_path, index=False)
 
