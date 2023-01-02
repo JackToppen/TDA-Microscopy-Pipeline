@@ -1,17 +1,20 @@
 import os
-import glob
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import ndimage
 from matplotlib import colors
-from PIL import Image
-from tifffile import tifffile
 from skimage.measure import regionprops
 from skimage.filters import gaussian, threshold_local
 from skimage.feature import peak_local_max
 from skimage.segmentation import watershed
 from skimage.morphology import label
+
+
+def abs_path(path):
+    """ Returns absolute path when given a potentially
+        relative path or one containing '~'.
+    """
+    return os.path.abspath(os.path.expanduser(path))
 
 
 def get_images(path, match):
