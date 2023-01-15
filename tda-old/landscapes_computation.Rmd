@@ -32,14 +32,14 @@ source("config.R")
 print(sprintf("ncohorts=%i,nconcentrations=%i, nsamples=%i, percentile=%i, npatches=%i", ncohorts,  nconcentrations, nsamples, percentile, npatches))
 ```
 ```{r pick-cell-type-and-homology-degree}
-type <- "double negative"   #red, green, double positive, double negative
+type <- "red"   #red, green, double positive, double negative
 n <- 2  #2 for homology in degree 1; 1 for homology in degree 0
 ```
 
 
 ```{r plot-persistence-diagrams}
-i <- 2 #pick image
-k <- 1 # pick patch
+i <- 1 #pick image
+k <- 2 # pick patch
 
 if (type == "red"){
   PDs <- PDs_red
@@ -90,12 +90,12 @@ PL_depth_cap <- 1
 max_PL_depth <- 0 # highest number of landscapes per diagram
 min_PL_depth <- Inf # lowest number of landscapes per diagram
 par(pty="s")
-for (i in 1:length(data_filenames)){ # for each sample
+for (i in 1:1){ # for each sample
    #print(i)
   PLs[[i]] <- list()
   for (k in 1:npatches){
     PLs[[i]][[k]] <- landscape0(PDs[[i]][[k]]$pairs[[n]], degree=1, exact=FALSE, dx=dx, min_x=min_x, max_x=max_x)
-    #plot_landscape(PLs[[i]][[k]], max_y)
+    plot_landscape(PLs[[i]][[k]], 300, 30)
     #title(main=sprintf("file number %f ", i))
     depth <- dim(PLs[[i]][[k]]$getInternal())[1]
     max_PL_depth <- max(max_PL_depth, depth)
