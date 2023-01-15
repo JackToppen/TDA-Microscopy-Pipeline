@@ -181,7 +181,7 @@ gudhi2tdatools <- function(gudhi_dgm) {
 #Euclidean distance between two vectors 
 euclidean.distance <- function(u, v) sqrt(sum((u - v) ^ 2))
 
-#permutation test for two group of data that are saved as matrices
+#permutation test on two groups of data that are saved as matrices
 permutation_test <- function(group1, group2, nrepeats = 10000){
   M <- rbind(group1, group2)
   n <- nrow(M) # number of total data points
