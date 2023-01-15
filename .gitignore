@@ -1,12 +1,8 @@
 .Rhistory
 .RData
 .DS_Store
-
-Microscopy/*
-CSVs/*
-Normalized/*
-Discretized_Images/*
-Discretized_Values/*
+.ipynb_checkpoints
 
 *.pyo
 *.pyc
+
