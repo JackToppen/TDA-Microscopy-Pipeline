@@ -16,19 +16,18 @@ plot_diagram <- function(PersistenceDiagram, sc1, sc2, sc3){
     max = rep(max(finite), dim(infinite)[1])
     min_z = min(finite)
     max_z = max(finite)
-    plot(NULL, xlim=c(0,80), ylim=c(0,80),  ylab="", xlab="", bty="o")
-    abline(0,1)
+    plot(NULL, xlim=c(1.25,50), ylim=c(1.25,50),  ylab="", xlab="", bty="o") #use xaxs = "i", yaxs = "i" to start axis at 0
     #grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted",
     #lwd = par("lwd"), equilogs = TRUE)
     for (i in 1:length(finite[,1])){
-      points(finite[i,1], finite[i,2], col='orange', pch=20, cex=0.8)
+      points(finite[i,1], finite[i,2], col='orange', pch=20, cex=1)
     }
-   
+    abline(0,1)
   }
 }
 
 #plot landscapes using color scheme (edited code from tda-tools)
-plot_landscape_internal_levels <- function(internal, l1, l2, y_max, y_min=0){
+plot_landscape_internal_levels <- function(internal, l1, l2, y_max){
   infinity_sub=-1
   line_width <- 1
   mycolors <- rep(c("midnightblue","slateblue", "royalblue2", "deepskyblue4", "deepskyblue3",
@@ -45,14 +44,21 @@ plot_landscape_internal_levels <- function(internal, l1, l2, y_max, y_min=0){
   
   level1 <- accessLevel(internal,l1)
   
-
   if (l1 >= numLevels(internal)){
-    plot(0, xlab='', ylab='',  bty="o", col=mycolors[1], lwd=line_width, ylim=c(0,0.5), xlim=c(0,4))
+    plot(NULL, xlim=c(2.25,100),ylim=c(-2,2),  xlab='', ylab='',  bty="o", col=mycolors[1], lwd=line_width) #xaxp=c(0,100, 2),  yaxp=c(0,16, 2),
   } else if (missing(y_max) & l1 < numLevels(internal)){ # plot as usual
-    plot(level1[,1],level1[,2], type='l', xlab='', ylab='', bty="o", col=mycolors[1], lwd=line_width, ylim=c(0,0.5), xlim=c(0,4))
+    plot(level1[,1],level1[,2], xlim=c(2.25,100),ylim=c(-2,2), type='l', xlab='', ylab='', bty="o", col=mycolors[1], lwd=line_width) #use xaxt='n', yaxt='n' to remove  axis labels
   } else if (l1 < numLevels(internal)){ # specify limits of y axis
-    plot(level1[,1],level1[,2], type='l', ann=FALSE, bty="o",col=mycolors[1], lwd=line_width, ylim=c(0,0.5), xlim=c(0,4))#viridis(numLevels(internal))
+    plot(level1[,1],level1[,2], xlim=c(2.25,100) , ylim=c(-2,2), type='l', ann=FALSE, bty="o",col=mycolors[1], lwd=line_width)#viridis(numLevels(internal))
   }
+  
+#  if (l1 >= numLevels(internal)){
+#    plot(NULL, xlim=c(7.5,300),ylim=c(0.3,12), xaxp=c(0,300, 3),  yaxp=c(0,12, 3), xlab='', ylab='',  bty="o", col=mycolors[1], lwd=line_width) #xaxp=c(0,100, 2),  yaxp=c(0,16, 2),
+#  } else if (missing(y_max) & l1 < numLevels(internal)){ # plot as usual
+#    plot(level1[,1],level1[,2], xlim=c(7.5,300),ylim=c(0.3,12), xaxp=c(0,300, 3),  yaxp=c(0,12, 3), type='l', xlab='', ylab='', bty="o", col=mycolors[1], lwd=line_width) #use xaxt='n', yaxt='n' to remove  axis labels
+#  } else if (l1 < numLevels(internal)){ # specify limits of y axis
+#    plot(level1[,1],level1[,2], xlim=c(7.5,300) , ylim=c(0.3,12), xaxp=c(0,300, 3),  yaxp=c(0,12, 3), type='l', ann=FALSE, bty="o",col=mycolors[1], lwd=line_width)#viridis(numLevels(internal))
+#  }
 
   if(l1 < numLevels(internal) & l2 <= numLevels(internal)){
     for(level in l1:l2){
@@ -203,21 +209,21 @@ gudhi2tdatools <- function(gudhi_dgm) {
 
 #permutation test (code edited from Peter Bubenik's Introduction to Topological Data Analysis with R )
 permutation_test <- function(group1, group2, nrepeats = 10000){
-  if (class(group1)=="integer" | class(group1)=="numeric"){
-    M <- c(group1, group2)
-    n <- length(M) # number of total data points
-    k <- length(group1) # number of data points in first group
-    observation <- euclidean.distance(mean(group1),mean(group2))
-    ngreater_distances <- 0
-    for (i in 1:nrepeats){
-      permutation <- sample(1:n)
-      distance <- euclidean.distance(mean(M[permutation[1:k]]),mean(M[permutation[(k+1):n]]))
-      if (distance >= observation)
-        ngreater_distances <- ngreater_distances + 1
-    }
-    return(ngreater_distances/nrepeats)
-    break
-  } else{
+#if (class(group1)=="integer" | class(group1)=="numeric"){
+ #   if (class(group1)=="numeric" & class(group2)=="numeric"){
+  #  M <- c(group1, group2)
+  #  n <- length(M) # number of total data points
+  #  k <- length(group1) # number of data points in first group
+  #  observation <- euclidean.distance(mean(group1),mean(group2))
+  #  ngreater_distances <- 0
+  #  for (i in 1:nrepeats){
+   #   permutation <- sample(1:n)
+   #   distance <- euclidean.distance(mean(M[permutation[1:k]]),mean(M[permutation[(k+1):n]]))
+   #   if (distance >= observation)
+   #     ngreater_distances <- ngreater_distances + 1
+  #  }
+  #  return(ngreater_distances/nrepeats)
+ # } else{
     M <- rbind(group1, group2)
     n <- nrow(M) # number of total data points
     k <- nrow(group1) # number of data points in first group
@@ -230,6 +236,6 @@ permutation_test <- function(group1, group2, nrepeats = 10000){
         ngreater_distances <- ngreater_distances + 1
     }
     return(ngreater_distances/nrepeats)
-  }
+ # }
 }
 

@@ -18,6 +18,7 @@ knitr::opts_knit$set(root.dir="/Users/Iryna/Github/cell-patterning-project")
 library(tictoc)
 library(ggplot2)
 library(ggpubr)
+library(kernlab)
 #library(viridisLite)
 #library(viridis)
 source("utilities.R")
@@ -134,9 +135,32 @@ label_2 <- matrix("HA", nrow=nimages, ncol=1)
 Labels <- rbind(label_1, label_2)
 
 # plot solution 
-ggplot(as.data.frame(mds$points), aes(x=x, y=y, col=Labels))+geom_point(size=1.4)+theme(aspect.ratio = 1)
+ggplot(as.data.frame(mds$points), aes(x=as.data.frame(mds$points)[,1], y=as.data.frame(mds$points)[,2], col=Labels))+geom_point(size=1.4)+theme(aspect.ratio = 1)
 #points(cohort_distances_mds$points, col="black", pch=c(8,cohort_outline_pch), bty="n", ann=FALSE)
 ```
+```{r MDS concentrations}
+data_labels <- c(rep(1,15), rep(2,15), rep(3,15), rep(4,15), rep(1,15), rep(2,15), rep(3,15), rep(4,15))
+d <- dist(cbind(vec_red[(1+n*(1-j)):(n+n*(1-j)), (PL_length_red*0+1):(PL_length_red*30)], vec_gr[(1+n*(1-j)):(n+n*(1-j)),(PL_length_gr*0+1):(PL_length_gr*30)], vec_pos[(1+n*(1-j)):(n+n*(1-j)), (PL_length_pos*0+1):(PL_length_pos*30)], vec_neg[(1+n*(1-j)):(n+n*(1-j)), (PL_length_neg*0+1):(PL_length_neg*30)])) #30 is PL_depth_cap) # euclidean distances between the rows
+mds <- cmdscale(d,eig=TRUE, k=2) # k is the number of dim
+label_1 <- matrix("0 ng/ml", nrow=nimages, ncol=1)
+label_2 <- matrix("5 ng/ml", nrow=nimages, ncol=1)
+label_3 <- matrix("15 ng/ml", nrow=nimages, ncol=1)
+label_4 <- matrix("25 ng/ml", nrow=nimages, ncol=1)
+Dox_concentration <- rbind(label_1, label_2, label_3, label_4, label_1, label_2, label_3, label_4)
+other_labels <- c(1:120)
+pca_with_labels <- cbind(Dox_concentration, pchs, pca$x)
+colnames(pca_with_labels)[1] <- "Label"
+colnames(pca_with_labels)[2] <- "Symbol"
+pca_with_labels_df <- as.data.frame(pca_with_labels)
+
+ggplot(pca_df, aes(x=PC1, y=PC2, colour = Dox_concentration, shape = factor(pchs)))+geom_point(size=1.3)+theme(aspect.ratio = 1)+labs(
+         colour = "Dox concentration",
+         shape = "Group"
+        )+scale_color_discrete(breaks=c("0 ng/ml","5 ng/ml","15 ng/ml", "25 ng/ml"))
+ggplot(pca_df, aes(x=PC2, y=PC3, col=Dox_concentration))+geom_point(size=1.3)+theme(aspect.ratio = 1)
+ggplot(pca_df, aes(x=PC1, y=PC3, col=Dox_concentration))+geom_point(size=1.3)+theme(aspect.ratio = 1)
+```
+
 
 ```{r 15 vs 25}
 data_labels <- c(rep(1,15), rep(2,15), rep(1,15), rep(2,15))
@@ -162,8 +186,8 @@ ggplot(pca_df, aes(x=PC1, y=PC3, col=Dox_concentration))+geom_point(size=1.3)+th
 
 
 ```{r permutation test, eval=FALSE}
-vectorized_PLs <- vec_gr[,1:(PL_length_gr*30)]
-#vectorized_PLs <- vectorized_PLs[, colSums(abs(vectorized_PLs)) != 0]
+vectorized_PLs <- vec_neg[,1:(PL_length_neg*30)]
+vectorized_PLs <- vectorized_PLs[, colSums(abs(vectorized_PLs)) != 0]
 #vectorized_PLs <- scale(vectorized_PLs)
 #vectorized_PLs <- rbind(cbind(counts[[1]][,1],counts[[1]][,3]),cbind( counts[[2]][,1],counts[[2]][,3]))
 
@@ -173,9 +197,9 @@ vectorized_PLs <- vec_gr[,1:(PL_length_gr*30)]
 
 nrepeats <- 10000
 print("Permutation test results:")
-p_value <- permutation.test(vectorized_PLs[(3*nimages*npatches+1):(3*nimages*npatches),],  vectorized_PLs[(3*nimages*npatches+1+4*nimages*npatches):(4*nimages*npatches+4*nimages*npatches),])
-#p_value <- permutation.test(vectorized_PLs[(3*nimages*npatches+1):(4*nimages*npatches), ],   vectorized_PLs[(3*nimages*npatches+1+4*nimages*npatches):(4*nimages*npatches+4*nimages*npatches), ], num.repeats = nrepeats)
-#p_value <- permutation.test(vectorized_PLs[(1*nsamples+1):(2*nsamples),], vectorized_PLs[(3*nsamples+1):(4*nsamples),])
+#p_value <- permutation.test(vectorized_PLs[(3*nimages*npatches+1):(3*nimages*npatches),],  vectorized_PLs[(3*nimages*npatches+1+4*nimages*npatches):(4*nimages*npatches+4*nimages*npatches),])
+#p_value <- permutation_test(vectorized_PLs[(3*nimages*npatches+1):(4*nimages*npatches), ],   vectorized_PLs[(3*nimages*npatches+1+4*nimages*npatches):(4*nimages*npatches+4*nimages*npatches), ], num.repeats = nrepeats)
+p_value <- permutation_test(vectorized_PLs[(2*nsamples+1):(3*nsamples),], vectorized_PLs[(3*nsamples+1):(4*nsamples),])
 print(sprintf("p-value %f:", p_value))
 ```
 
@@ -234,7 +258,7 @@ for (k in 1:length(vec)){
 
 
 ```{r confusion-matrix-multiclass-SVM}
-cohort <- "Gata6"
+cohort <- "HA"
 if (cohort == "Gata6"){
   j <- 1 #if Gata6
 } else {
@@ -246,11 +270,11 @@ num_folds <- 10
 n <- nsamples*nconcentrations #number of patches per cohort
 ntest_data <- n/num_folds
 data_labels <- matrix(c(rep(0,nsamples), rep(5,nsamples), rep(15,nsamples), rep(25,nsamples)))
-rand_perm <- a
+rand_perm <-  sample(n)
 #vectorized_PLs <- scale(counts[[1]])
-vectorized_PLs <- cbind(vec_red[(1+n*(1-j)):(n+n*(1-j)), (PL_length_red*3+1):(PL_length_red*30)], vec_gr[(1+n*(1-j)):(n+n*(1-j)),(PL_length_gr*3+1):(PL_length_gr*30)],vec_pos[(1+n*(1-j)):(n+n*(1-j)),(PL_length_pos*3+1):(PL_length_pos*30)], vec_neg[(1+n*(1-j)):(n+n*(1-j)),(PL_length_neg*3+1):(PL_length_neg*30)])  #30 is PL_depth_cap
-#vectorized_PLs <- vectorized_PLs[, colSums(abs(vectorized_PLs)) != 0]
-#vectorized_PLs <- scale(vectorized_PLs)
+#vectorized_PLs <- cbind(vec_red[(1+n*(1-j)):(n+n*(1-j)), (PL_length_red*3+1):(PL_length_red*30)], vec_gr[(1+n*(1-j)):(n+n*(1-j)),(PL_length_gr*3+1):(PL_length_gr*30)],vec_pos[(1+n*(1-j)):(n+n*(1-j)),(PL_length_pos*3+1):(PL_length_pos*30)], vec_neg[(1+n*(1-j)):(n+n*(1-j)),(PL_length_neg*3+1):(PL_length_neg*30)])  #30 is PL_depth_cap
+vectorized_PLs <- vectorized_PLs[, colSums(abs(vectorized_PLs)) != 0]
+vectorized_PLs <- scale(vectorized_PLs)
 
 vectorized_PLs_permuted <- vectorized_PLs[rand_perm,]
 data_labels_permuted <- data_labels[rand_perm]
@@ -276,6 +300,53 @@ print(s/n)
 table(unlist(predictions),data_labels_permuted)
 ```
 
+```{r confusion-matrix-multiclass-SVM-3 cobcentrations}
+cohort <- "HA"
+if (cohort == "Gata6"){
+  j <- 1 #if Gata6
+} else {
+  j <- 0 #if HA
+}
+print(cohort)
+cost <- 10
+num_folds <- 10
+n <- nsamples*(nconcentrations-1) #number of patches per cohort
+ntest_data <- n/num_folds
+data_labels <- matrix(rep(5,nsamples), rep(15,nsamples), rep(25,nsamples))
+rand_perm <-  sample(n)
+#vectorized_PLs <- scale(counts[[1]])
+
+
+#no 0 concentration
+vectorized_PLs <- cbind(vec_red[(nsamples+1+n*(1-j)):(n+n*(1-j)), (PL_length_red*0+1):(PL_length_red*30)], vec_gr[(nsamples+1+n*(1-j)):(n+n*(1-j)),(PL_length_gr*0+1):(PL_length_gr*30)],vec_pos[(nsamples+1+n*(1-j)):(n+n*(1-j)),(PL_length_pos*0+1):(PL_length_pos*30)], vec_neg[(nsamples+1+n*(1-j)):(n+n*(1-j)),(PL_length_neg*0+1):(PL_length_neg*30)])
+vectorized_PLs <- vectorized_PLs[, colSums(abs(vectorized_PLs)) != 0]
+vectorized_PLs <- scale(vectorized_PLs)
+
+vectorized_PLs_permuted <- vectorized_PLs[rand_perm,]
+data_labels_permuted <- data_labels[rand_perm]
+svm_model <- list()
+predictions <- list()
+for (i in 1:num_folds){
+svm_model[[i]] <- ksvm(vectorized_PLs_permuted[-((ntest_data*(i-1) + 1):(ntest_data*(i-1)+ntest_data )),],data_labels_permuted[-((ntest_data*(i-1) + 1):(ntest_data*(i-1)+ntest_data ))],type="C-svc",scaled = FALSE,kernel="vanilladot")
+predictions[[i]] <- predict(svm_model[[i]],vectorized_PLs_permuted[((ntest_data*(i-1) + 1):(ntest_data*(i-1)+ntest_data )),])
+}
+predictions <- unlist(predictions)
+s <- 0
+for (i in 1:n){
+    if (predictions[[i]] == data_labels_permuted[[i]]){
+      s <- s+1
+    }
+}
+#for (i in 1:n){
+#    if (predictions[[i]] != data.labels.permuted[[i]] & data.labels.permuted[[i]]==15 & predictions[[i]]==25){
+ #     print(rand.perm[[i]])
+#    }
+#}
+print(s/n)
+table(unlist(predictions),data_labels_permuted)
+```
+
+
 ```{r multiclass-SVM}
 tic()
 cohort <- "Gata6"
@@ -291,10 +362,13 @@ num_folds <- 10
 n <- nsamples*nconcentrations #number of patches per cohort
 ntest_data <- n/num_folds
 data_labels <- matrix(c(rep(0,nsamples), rep(5,nsamples), rep(15,nsamples), rep(25,nsamples)))
-#vectorized_PLs <- scale(counts[[2]])
+#vectorized_PLs <- scale(counts[[1]])
 vectorized_PLs <- cbind(vec_red[(1+n*(1-j)):(n+n*(1-j)), (PL_length_red*0+1):(PL_length_red*30)], vec_gr[(1+n*(1-j)):(n+n*(1-j)),(PL_length_gr*0+1):(PL_length_gr*30)],vec_pos[(1+n*(1-j)):(n+n*(1-j)),(PL_length_pos*0+1):(PL_length_pos*30)], vec_neg[(1+n*(1-j)):(n+n*(1-j)),(PL_length_neg*0+1):(PL_length_neg*30)]) #30 is PL_depth_cap
-vectorized_PLs <- vectorized_PLs[, colSums(abs(vectorized_PLs)) != 0]
-vectorized_PLs <- scale(vectorized_PLs)
+
+#no 0 concentration
+vectorized_PLs <- cbind(vec_red[(namples+1+n*(1-j)):(n+n*(1-j)), (PL_length_red*0+1):(PL_length_red*30)], vec_gr[(namples+1+n*(1-j)):(n+n*(1-j)),(PL_length_gr*0+1):(PL_length_gr*30)],vec_pos[(namples+1+n*(1-j)):(n+n*(1-j)),(PL_length_pos*0+1):(PL_length_pos*30)], vec_neg[(namples+1+n*(1-j)):(n+n*(1-j)),(PL_length_neg*0+1):(PL_length_neg*30)]) #30 is PL_depth_cap
+#vectorized_PLs <- vectorized_PLs[, colSums(abs(vectorized_PLs)) != 0]
+#vectorized_PLs <- scale(vectorized_PLs)
 
 
 accuracy <- list()
@@ -347,10 +421,10 @@ nrepeats <- 20
 num_folds <- 10
 n <- nsamples*nconcentrations #number of patches per cohort
 ntest_data <- n/num_folds
-#vectorized_PLs <- scale(counts[[2]])
-vectorized_PLs <- cbind(vec_red[(1+n*(1-j)):(n+n*(1-j)), (PL_length_red*0+1):(PL_length_red*30)], vec_gr[(1+n*(1-j)):(n+n*(1-j)),(PL_length_gr*0+1):(PL_length_gr*30)],vec_pos[(1+n*(1-j)):(n+n*(1-j)),(PL_length_pos*0+1):(PL_length_pos*30)], vec_neg[(1+n*(1-j)):(n+n*(1-j)),(PL_length_neg*0+1):(PL_length_neg*30)]) #30 is PL_depth_cap
-vectorized_PLs <- vectorized_PLs[, colSums(abs(vectorized_PLs)) != 0]
-vectorized_PLs <- scale(vectorized_PLs)
+vectorized_PLs <- scale(counts[[1]])
+#vectorized_PLs <- cbind(vec_red[(1+n*(1-j)):(n+n*(1-j)), (PL_length_red*0+1):(PL_length_red*30)], vec_gr[(1+n*(1-j)):(n+n*(1-j)),(PL_length_gr*0+1):(PL_length_gr*30)],vec_pos[(1+n*(1-j)):(n+n*(1-j)),(PL_length_pos*0+1):(PL_length_pos*30)], vec_neg[(1+n*(1-j)):(n+n*(1-j)),(PL_length_neg*0+1):(PL_length_neg*30)]) #30 is PL_depth_cap
+#vectorized_PLs <- vectorized_PLs[, colSums(abs(vectorized_PLs)) != 0]
+#vectorized_PLs <- scale(vectorized_PLs)
 
 data_labels <- c(rep(0,nsamples),rep(5,nsamples),rep(15,nsamples),rep(25,nsamples))
 predictions_list <- list()
@@ -424,6 +498,7 @@ stripchart(data$values ~ data$labels, vertical=TRUE, method="jitter", pch=19, co
 ```
 
 ```{r plot-SVR-images-ggplot}
+prediction<- prediction_H
 prediction_images <- vector()
 for (i in 1:(nimages*nconcentrations)){
   prediction_images[i] <- mean(sort(prediction[((i-1)*npatches+1):(i*npatches)]))
@@ -436,12 +511,12 @@ data <- data.frame(concentration, value)
 #new_data$concentration <- factor(data$concentration , levels=c("0", "5", "15", "25"))
 
 
-SVR_H_mean <- ggplot(data, aes(x=concentration, y=value, fill=concentration)) +scale_x_discrete(limits=c("0", "5", "15", "25"))+
+H <- ggplot(data, aes(x=concentration, y=value, fill=concentration)) +scale_x_discrete(limits=c("0", "5", "15", "25"))+
     geom_boxplot(alpha=0.4)  +
     geom_jitter(color="black", size=0.7, alpha=0.9)+
     theme(
-      plot.title = element_text(size=11), aspect.ratio=1)+
-    xlab("")+ylab("predicted Dox concentration")+coord_cartesian(ylim=c(0,28))+scale_y_continuous(breaks = c(-5, 0, 5, 10,15,20,25,30))+scale_fill_discrete(breaks=c('0', '5', '15', '25'))+guides(fill=guide_legend(title="Dox concentration"))
+      plot.title = element_text(size=11), aspect.ratio=1, text = element_text(size=18))+
+    xlab("actual Dox concentration")+ylab("predicted Dox concentration")+coord_cartesian(ylim=c(0,28))+scale_y_continuous(breaks = c(-5, 0, 5, 10,15,20,25,30))+scale_fill_discrete(breaks=c('0', '5', '15', '25'))+guides(fill=guide_legend(title="Dox concentration"))
 ```
 
 ```{r ggarange-plots}
@@ -457,8 +532,10 @@ SVR_H_mean <- ggplot(data, aes(x=concentration, y=value, fill=concentration)) +s
 #SVR_G_med_sc0_30
 #SVR_G_mean_sc0_30
 #SVR_G_mean_6_11_sc0_30
-ggarrange(SVR_G_med, SVR_H_med, nrow=1,common.legend = TRUE, legend = "bottom")
-ggarrange(SVR_G_mean, SVR_H_mean, nrow=1,common.legend = TRUE, legend = "bottom")
+#ggarrange(SVR_G_med, SVR_H_med, nrow=1,common.legend = TRUE, legend = "bottom")
+#ggarrange(SVR_G_mean, SVR_H_mean, nrow=1,common.legend = TRUE, legend = "bottom")
+#ggarrange(SVR_G_mean_sc0_30, SVR_H_mean_sc0_30, nrow=1,common.legend = TRUE, legend = "top")
+ggarrange(G, H, nrow=1,common.legend = TRUE, legend = "none")
 #ggarrange(SVR_G_med_sc0_30, SVR_H_med_sc0_30, nrow=1,common.legend = TRUE, legend = "right")
 #ggarrange(SVR_G_med, SVR_H_med, nrow=1,common.legend = TRUE, legend = "bottom")
 

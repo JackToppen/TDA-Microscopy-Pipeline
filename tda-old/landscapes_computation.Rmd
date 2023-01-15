@@ -15,9 +15,9 @@ knitr::opts_knit$set(root.dir="/Users/Iryna/Github/cell-patterning-project")
 ```
 ```{r libraries, message=FALSE}
 library(tictoc)
+library(Rcpp)
+
 library(tdatools)
-library(viridisLite)
-library(viridis)
 library(Matrix)
 source("utilities.R")
 source("config.R")
@@ -32,13 +32,13 @@ source("config.R")
 print(sprintf("ncohorts=%i,nconcentrations=%i, nsamples=%i, percentile=%i, npatches=%i", ncohorts,  nconcentrations, nsamples, percentile, npatches))
 ```
 ```{r pick-cell-type-and-homology-degree}
-type <- "red"   #red, green, double positive, double negative
+type <- "double negative"   #red, green, double positive, double negative
 n <- 2  #2 for homology in degree 1; 1 for homology in degree 0
 ```
 
 
 ```{r plot-persistence-diagrams}
-i <- 30 #pick image
+i <- 2 #pick image
 k <- 1 # pick patch
 
 if (type == "red"){
@@ -52,12 +52,14 @@ if (type == "red"){
 }
 
 par(pty="s", pch=20)
-PDplot(PDs[[i]][[k]]$pairs[[n]])
+plot_diagram(PDs[[i]][[k]]$pairs[[n]])
 title(main=sprintf("File %s, patch %1.0f, %s cells", i, k, type))
+
+#PDplot(PDs[[i]][[k]]$pairs[[n]])
 ```
 
 ```{r compute-landscape-parameters}
-dx <- 0.01 #discretization step
+dx <- 0.5 #discretization step
 min_x <- 0
 max_x <- 0
 max_y <- 0
@@ -84,7 +86,7 @@ print(sprintf("dx=%f, min_x=%f, max_x=%f, max_y=%f, landscape_length=%i", dx, mi
 tic()
  
 PLs <- list()
-PL_depth_cap <- 300 
+PL_depth_cap <- 1
 max_PL_depth <- 0 # highest number of landscapes per diagram
 min_PL_depth <- Inf # lowest number of landscapes per diagram
 par(pty="s")
@@ -117,12 +119,17 @@ for (j in 1:ncohorts){
     PLs_list[[j]][[c]] <- list()
     for (i in 1:nimages){
       for (k in 1:npatches){
-        PLs_list[[j]][[c]] <- append(PLs_list[[j]][[c]],PLs[[nimages*(c-1)+(j-1)*nimages*nconcentrations+i]][[k]])
+       # if (cell_number_r[[j]][[c]][[i]][[k]]){
+           PLs_list[[j]][[c]] <- append(PLs_list[[j]][[c]],PLs[[nimages*(c-1)+(j-1)*nimages*nconcentrations+i]][[k]])
+       # }
       }
     }
   }
 }
+```
 
+
+```{r }
 par(pty="s")
 PLs_avg <- list()
 for (j in 1:ncohorts){
@@ -132,7 +139,7 @@ for (j in 1:ncohorts){
     cohort <- "HA" #if HA
   }
   PLs_avg[[j]] <- list()
-  for (c in 1:nconcentrations){
+  for (c in 1:4){
     if (c==1){
       concentration <- 0
     } else if (c==2){
@@ -141,10 +148,10 @@ for (j in 1:ncohorts){
       concentration <- 15
     } else {concentration <- 25 }
     PL_sum <- PLs_list[[j]][[c]][[1]]
-    for (i in 2:(nimages*npatches)){
+    for (i in 2:length(PLs_list[[j]][[c]])){
       PL_sum <- PLsum(PL_sum, PLs_list[[j]][[c]][[i]])
     }
-    PLs_avg[[j]][[c]]<- PLscale(1/(nimages*npatches), PL_sum)
+    PLs_avg[[j]][[c]]<- PLscale(1/(length(PLs_list[[j]][[c]])), PL_sum)
     #plot_landscape_levels(PLs_avg[[j]][[c]], 1, max_PL_depth)
     #title(main=sprintf("Average PL for %s concentration %1.0f",cohort,concentration)) 
   }
@@ -153,17 +160,17 @@ for (j in 1:ncohorts){
 ```
 
 ```{r plot avgPLs}
-par(pty="s")
-plot_landscape_levels(PLs_avg[[1]][[1]], 1, 700)
+par(pty="s", font.axis=1.7, cex.axis=1.5)
+plot_landscape_levels(PLs_avg[[1]][[1]], 1, max_PL_depth)
 #title(main=sprintf("Average PL for %s concentration %1.0f","HA",1)) 
 
-plot_landscape_levels(PLs_avg[[1]][[2]], 1, 700)
+plot_landscape_levels(PLs_avg[[1]][[2]], 1, max_PL_depth)
 #title(main=sprintf("Average PL for %s concentration %1.0f","HA",2)) 
 
-plot_landscape_levels(PLs_avg[[1]][[3]], 1, 700)
+plot_landscape_levels(PLs_avg[[1]][[3]], 1, max_PL_depth)
 #title(main=sprintf("Average PL for %s concentration %1.0f","HA",3))
 
-plot_landscape_levels(PLs_avg[[1]][[4]], 1, 700)
+plot_landscape_levels(PLs_avg[[1]][[4]], 1, max_PL_depth)
 #title(main=sprintf("Average PL for %s concentration %1.0f","HA", 4))
 
 plot(0, 0)
@@ -171,7 +178,7 @@ plot(0, 0)
 
 
 ```{r plot-difference-in-average-landscapes-between-Gata6-and-HA}
-for (c in 1:nconcentrations){
+for (c in 4:nconcentrations){
   par(pty="s")
    if (c==1){
       concentration <- 0
@@ -182,11 +189,12 @@ for (c in 1:nconcentrations){
     } else {concentration <- 25 }
     #PLplot(PLsum(PLs_avg[[1]][[c]],PLscale(-1,PLs_avg[[2]][[c]])))
     plot_landscape_levels(PLsum(PLs_avg[[1]][[c]],PLscale(-1,PLs_avg[[2]][[c]])), 1, max_PL_depth)
+    abline(v=35, col = adjustcolor("gray", alpha = 0.9), lwd=1)
     #grid(nx = 20, col = "lightgray", lty = "dotted",
     # lwd = par("lwd"), equilogs = TRUE)
     #ticks = c(25, 55)
     #axis(side = 1, at = ticks)
-    #abline(v=20, col="red",  lwd=0.2)
+    #abline(v=35, col="gray",  lwd=0.3)
     #abline(v=58, col="red", lwd=0.3)
     title(main=sprintf("Gata6 vs HA concentration %1.0f",concentration)) 
     plot(x=0,y=1)
@@ -321,14 +329,14 @@ plot_landscape_levels(PLsum(PLs[[45+15]][[2]],PLscale(-1,PLs[[60+45+10]][[10]]))
 
 
 ```{r number-of-points-in-PDs-above-threshold}
-h <- 10 #threshold
+h <- 20 #threshold
 
 upper_PDs <- list()
 for (i in 1:length(data_filenames)){
   for (k in 1:npatches){
     count <- 0
     for (j in 1:nrow(PDs[[i]][[k]]$pairs[[2]])){
-      if (((PDs[[i]][[k]]$pairs[[2]][j,2]-PDs[[i]][[k]]$pairs[[2]][j,1]) >= 1)){
+      if (((PDs[[i]][[k]]$pairs[[2]][j,2]-PDs[[i]][[k]]$pairs[[2]][j,1]) >= h)){
         count <- count+1
       }
     }
@@ -345,7 +353,7 @@ print(sprintf("p-value %f:", p_value))
 ```
 
 ```{r d+b/2 threshhold}
-h <- 15 #threshold
+h <- 1 #threshold
 
 
 right_PDs <- list()
@@ -353,7 +361,7 @@ for (i in 1:length(data_filenames)){
   for (k in 1:npatches){
     Rcount <- 0
     for (j in 1:nrow(PDs[[i]][[k]]$pairs[[2]])){
-     if  (((PDs[[i]][[k]]$pairs[[2]][j,2]-PDs[[i]][[k]]$pairs[[2]][j,1]) >  0.5)){
+     if  ( ((PDs[[i]][[k]]$pairs[[2]][j,2]-PDs[[i]][[k]]$pairs[[2]][j,1]) > 20) &  ((PDs[[i]][[k]]$pairs[[2]][j,2]+ PDs[[i]][[k]]$pairs[[2]][j,1]) >  70)  ){
         Rcount <- Rcount+1
       } else {
       }
@@ -361,18 +369,30 @@ for (i in 1:length(data_filenames)){
     right_PDs <- append(right_PDs, Rcount)
   }
 }
-count <- 0
-for (i in (240*7+1):(240*8)){
+
+countG <- 0
+for (i in (240*3+1):(240*4)){
   if  (right_PDs[i] > 0){
-        count <- count+1
+        countG <- countG+1
       }
 }
+
+countH <- 0
+for (i in (240*7+1):(240*8)){
+  if  (right_PDs[i] > 0){
+        countH <- countH+1
+      }
+}
+
+
 hist(unlist(right_PDs[(240*3+1):(240*4)]), ylim=c(0,150))
 print(unlist(right_PDs[(240*3+1):(240*4)]))
 print(sum(unlist(right_PDs[(240*3+1):(240*4)])))
+print(sum(unlist(right_PDs[(240*3+1):(240*4)]))/length(unlist(right_PDs[(240*3+1):(240*4)])))
 hist(unlist(right_PDs[(240*7+1):(240*8)]), ylim=c(0,150))
 print(unlist(right_PDs[(240*7+1):(240*8)]))
 print(sum(unlist(right_PDs[(240*7+1):(240*8)])))
+print(sum(unlist(right_PDs[(240*7+1):(240*8)]))/length(unlist(right_PDs[(240*7+1):(240*8)])))
 #print(left_PDs[(240*3):(240*4)])
 #print(left_PDs[(240*7):(240*8)])
 ```
@@ -380,7 +400,7 @@ print(sum(unlist(right_PDs[(240*7+1):(240*8)])))
 ```{r perm-test}
 nrepeats <- 10000
 print("Permutation test results:")
-p_value <- permutation.test.0(unlist(right_PDs[(1+nsamples*3):(nsamples*4)]), unlist((right_PDs[(1+nsamples*7):(nsamples*8)])))
+p_value <- permutation_test(unlist(right_PDs[(1+nsamples*3):(nsamples*4)]), unlist((right_PDs[(1+nsamples*7):(nsamples*8)])))
 print(sprintf("p-value %f:", p_value))
 ```
 ```
