@@ -1,4 +1,4 @@
-# TDA-Microscopy-Pipeline
+# Discretization
 
 ------------------------------------------------------------------------
 
@@ -14,7 +14,7 @@ install.packages(c("ggplot2", "ggforce", "cowplot"))
 
 ## Functions and paths
 
-*Pull generalized functions for processing the segmentation files before running TDA.*
+*Pull generalized functions for processing the segmentation files.*
 
 ```{r}
 # get helper functions

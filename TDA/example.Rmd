@@ -1,0 +1,68 @@
+# Topological Data Analysis
+
+------------------------------------------------------------------------
+
+#### Dependencies (change to whatever you need)
+
+*Install the following libraries used for calculating persistent homology before running the pipeline.*
+
+```{r}
+install.packages(c("ggplot2", "ggforce", "cowplot"))
+```
+
+------------------------------------------------------------------------
+
+## Functions
+
+*Pull generalized functions for processing the CSV files from the discretization pipeline.*
+
+```{r}
+# get helper functions
+source("utilities.R")
+```
+
+## Compute persistent homology
+
+*(Insert comment)*
+
+```{r}
+# specify location path of discretized CSVs
+csv_dir_path <- "~/Research/TDA/TDA-new/Discretized-CSVs/75/Nanog_Gata6/1"
+
+# recursively finds CSV files within directory and returns file-names in a list
+files <- get_csvs(csv_dir_path)
+
+# read first CSV file (overwrite this)
+path <- concat_path(csv_dir_path, files[1])
+df <- read.csv(path)
+print(files)
+print(df)
+
+
+# this block should return some list of PD data after inputting the file-names of the CSVs
+# data <- compute_homology(csv_dir_path)
+```
+
+## Plot persistence diagrams
+
+*(Insert comment)*
+
+```{r}
+# this block should plot the persistence diagrams
+```
+
+## Generate persistence landscapes
+
+*(Insert comment)*
+
+```{r}
+# this block should generate the persistence landscape vectors
+```
+
+## Plot persistence landscapes
+
+*(Insert comment)*
+
+```{r}
+# this block should plot the persistence landscapes
+```
