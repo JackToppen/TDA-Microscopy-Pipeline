@@ -14,7 +14,7 @@ install.packages(c("Rcpp", "tdatools", "TDA"))
 
 ## Functions
 
-*Pull generalized functions for processing the CSV files from the discretization pipeline and.*
+*Pull generalized functions for TDA computations and for processing the CSV files from the discretization pipeline.*
 
 ```{r}
 # get helper functions
