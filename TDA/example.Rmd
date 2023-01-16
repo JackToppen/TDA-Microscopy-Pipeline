@@ -2,53 +2,111 @@
 
 ------------------------------------------------------------------------
 
-#### Dependencies (change to whatever you need)
+#### Dependencies
 
-*Install the following libraries used for calculating persistent homology before running the pipeline.*
+*Install the following libraries before running the TDA pipeline.*
 
 ```{r}
-install.packages(c("ggplot2", "ggforce", "cowplot"))
+install.packages(c("Rcpp", "tdatools", "TDA"))
 ```
 
 ------------------------------------------------------------------------
 
 ## Functions
 
-*Pull generalized functions for processing the CSV files from the discretization pipeline.*
+*Pull generalized functions for processing the CSV files from the discretization pipeline and.*
 
 ```{r}
 # get helper functions
 source("utilities.R")
 ```
 
-## Compute persistent homology
-
-*(Insert comment)*
+## Load data
 
 ```{r}
 # specify location path of discretized CSVs
-csv_dir_path <- "~/Research/TDA/TDA-new/Discretized-CSVs/75/Nanog_Gata6/1"
+#csv_dir_path <- "~/Research/TDA/TDA-new/Discretized-CSVs/75/Nanog_Gata6/1"
+csv_dir_path <- "/Users/Iryna/Dropbox/Mac/Documents/GitHub/TDA-Microscopy-Pipeline/tda-old/data/75/Nanog_Gata6/1/"
 
 # recursively finds CSV files within directory and returns file-names in a list
 files <- get_csvs(csv_dir_path)
+```
 
-# read first CSV file (overwrite this)
-path <- concat_path(csv_dir_path, files[1])
-df <- read.csv(path)
-print(files)
-print(df)
+## Compute persistence diagrams
 
+*We use Alpha filtration to compute persistence diagrams*
+*For two-dimensional data computing Alpha filtration is faster than computing Vietoris-Rips filtration*
 
-# this block should return some list of PD data after inputting the file-names of the CSVs
-# data <- compute_homology(csv_dir_path)
+```{r}
+#list of persistence diagrams for each file
+PD <- list()
+max_birth <- list() 
+max_death <- list() 
+for (i in 1:length(files)){
+  print(sprintf("Processing file %s", files[i]))
+  path <- concat_path(csv_dir_path, files[i])
+  cells <- read.csv(path)
+  #compute persistence homology using Alpha complex which is also known as Delaunay complex
+  PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
+  #convert persistence diagrams to tdatools data structure
+  PD[[i]] <- gudhi2tdatools(PH$diagram)
+  #birth and death values have been squared, so take the square root
+  PD[[i]]$pairs[[1]] <- sqrt(PD[[i]]$pairs[[1]]) #homology in degree 0 
+  #####################since we don't use H0 I can remove the above line################
+  PD[[i]]$pairs[[2]] <- sqrt(PD[[i]]$pairs[[2]]) #homology in degree 1
+  #max birth of 1-degree persistence diagrams 
+  max_birth[[i]] <- max(PD[[i]]$pairs[[2]][,1])
+  #max death of 1-degree persistence diagrams 
+  max_death[[i]] <- max(PD[[i]]$pairs[[2]][,2])
+}
 ```
 
 ## Plot persistence diagrams
-
-*(Insert comment)*
+**The scale of all plots are the same and is determined by max birth and max death radii**
 
 ```{r}
-# this block should plot the persistence diagrams
+par(pty="s")
+max_birth <- max(unlist(max_birth))
+max_death <- max(unlist(max_death))
+max_radius <- max(max_birth, max_death)
+for (i in 1:length(files)){
+  plot_diagram(PD[[i]]$pairs[[2]], max_radius)
+}
+```
+
+## Plot representative cycles that persist (live) over a certain threshold
+
+```{r}
+par(pty="s")
+
+#choose persistence threshold
+persist_threshold <- 20 
+
+for (i in 1:length(files)){
+  print(sprintf("Processing file %s", files[i]))
+  path <- concat_path(csv_dir_path, files[i])
+  cells <- read.csv(path)
+  #compute persistence homology using Alpha complex which is also known as Delaunay complex
+  filtration <- alphaComplexFiltration(cells[,1:2], printProgress = TRUE)
+  PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
+  PD <- PH[["diagram"]]
+  #plot cycles that persist over specific persistence_param
+  par(mfrow = c(1, 1))
+  ones <- which(PD[,1] == 1)
+  if (length(ones) > 1 ){
+    plot(filtration[["coordinates"]], pch = 19, cex=0.05, ylab="", xlab="", axes = FALSE)
+    for (m in ones[1]:(length(ones)+ones[1]-1)){
+      cycles <- PH[["cycleLocation"]][m]
+      if ((sqrt(PD[m,3]) - sqrt(PD[m,2])  > persist_threshold) ){
+        for (s in 1:length(cycles)){
+          for (l in 1:dim(cycles[[s]])[1]){
+            lines(cycles[[s]][l,,], col="darkorchid1", lwd=1)
+          }
+        } 
+      } 
+    }
+  }
+}
 ```
 
 ## Generate persistence landscapes
