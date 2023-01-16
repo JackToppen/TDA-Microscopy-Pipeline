@@ -18,23 +18,21 @@ concat_path <- function(path, filename) {
 }
 
 #plot persistence diagrams
-plot_diagram <- function(pairs, dgm_max, dgm_min){
+plot_diagram <- function(pairs, dgm_max){
   finite_points <- matrix(pairs[pairs[,2] != Inf], ncol=2)
   #line below is needed if we compute homology in degree 0 
   #because we might have path connected components that die at infinity
   infinite_points <- matrix(pairs[pairs[,2] == Inf], ncol=2) 
-  if (missing(dgm_min)){
-    dgm_min <- min(pairs)
-  }
+  
   if (missing(dgm_max)){
     dgm_max <- max(pairs[pairs[,] != Inf])
-    dgm_max <- dgm_max + 0.05*(dgm_max-dgm_min)
+    dgm_max <- dgm_max + 0.05*(dgm_max)
   }
   
   if (nrow(finite_points) > 0){
-    plot(finite_points, col='orange', bty="o", asp=1, xlab='', ylab='', xlim=c(dgm_min,dgm_max), ylim=c(dgm_min,dgm_max), cex=1)
+    plot(finite_points, col='orange', bty="o", asp=1, xlab='', ylab='', xlim=c(0,dgm_max), ylim=c(0,dgm_max), pch=20, cex=1)
   } else {
-    plot(c(dgm_min,dgm_min), col='white', bty="o", asp=1, xlab='', ylab='', xlim=c(dgm_min,dgm_max), ylim=c(dgm_min,dgm_max), cex=1)
+    plot(c(dgm_min,dgm_min), col='white', bty="o", asp=1, xlab='', ylab='', xlim=c(0,dgm_max), ylim=c(0,dgm_max), pch=20, cex=1)
   }
   points(infinite_points[,1],rep(dgm_max,nrow(infinite_points)), col='red', pch=20, cex=1)
   abline(0,1)
@@ -146,7 +144,7 @@ vectorize_landscapes <- function(PL_list, depth_cap=0){
   return(vect_PLs)
 }
 
-# convert persistence diagrams from data structure GUDHI (Dionysus) to tda-tools (Ripser)
+# convert persistence diagrams from data structure GUDHI (Dionysus) to tdatools (Ripser)
 gudhi2tdatools <- function(gudhi_dgm) {
   # extract first homology from gudhi diagram
   if (length(which(gudhi_dgm[,1]==1)) >1){
