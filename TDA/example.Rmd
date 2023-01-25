@@ -5,9 +5,10 @@
 #### Dependencies
 
 *Install the following libraries before running the TDA pipeline.*
+*For plotting persistence diagrams and persistence landscape computations  we use 'tda-tools' package. Since it is not on CRAN, follow this link https://github.com/jjbouza/tda-tools for installation instructions.*
 
 ```{r}
-install.packages(c("Rcpp", "TDA", "tdatools"))
+install.packages(c("Rcpp", "TDA"))
 ```
 
 ------------------------------------------------------------------------
