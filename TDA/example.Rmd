@@ -43,6 +43,7 @@ files <- get_csvs(csv_dir_path)
 
 *We use Alpha filtration to compute persistence diagrams*
 *For two-dimensional data computing Alpha filtration is faster than computing Vietoris-Rips filtration*
+*Since persistence computations might take long time to compute for a large data set, we recommend saving them*
 
 ```{r}
 #list of persistence diagrams for each file
@@ -67,17 +68,20 @@ for (i in 1:length(files)){
   max_death[[i]] <- max(PDs[[i]]$pairs[[2]][,2])
 }
 
-#save list of persistence diagrams (persistence computations might take long for a large data set so we recommend to save them)
-save_filename <-  "persistence-diagrams.RData"
-save_file_location <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/"
-save(PDs, file=paste0(save_file_location,save_filename))
+#save the list of persistence diagrams, the max birth and max death values
+save_PD_filename <-  "persistence-diagrams.RData" #name of the file
+save_PD_file_location <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/" #location where to save the file
+save(PDs, max_birth, max_death, file=paste0(save_PD_file_location,save_PD_filename))
 ```
 
 ## Plot persistence diagrams
 **The scale of all plots are the same and is determined by max birth and max death radii**
 
 ```{r}
-par(pty="s") #makes plot square
+par(pty="s") #makes a square plot 
+
+#load saved persistence diagrams
+load(paste0(save_PD_file_location,save_PD_filename))
 
 max_birth <- max(unlist(max_birth))
 max_death <- max(unlist(max_death))
@@ -171,12 +175,12 @@ plot_landscape(avgPL, max_x, max_height)
 
 ```{r}
 PL_depth_cap <- 30 # choose how many depth of a PL you want to use for further analysis
-vectorized_PLs1 <- vectorize_landscapes(PLs, PL_depth_cap)
+vectorized_PLs <- vectorize_landscapes(PLs, PL_depth_cap)
 
 #save PLs 
-save_filename <-  "vectorized-landscapes.RData"
-save_file_location <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/"
-save(PDs, file=paste0(save_file_location,save_filename))
+save_PL_filename <-  "vectorized-landscapes.RData"
+save_PL_file_location <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/"
+save(vectorized_PLs, file=paste0(save_PL_file_location,save_PL_filename))
 ```
 
 ## Perform a permutation test on PLs
@@ -184,11 +188,11 @@ save(PDs, file=paste0(save_file_location,save_filename))
 
 ```{r}
 #load saved vectorized PLs of two groups
-load("~/Documents/GitHub/TDA-Microscopy-Pipeline/vectorized-landscapes1.RData")
-load("~/Documents/GitHub/TDA-Microscopy-Pipeline/vectorized-landscapes2.RData")
+load(paste0(save_PL_file_location1,save_PL_filename1))
+load(paste0(save_PL_file_location2,save_PL_filename2))
 
 vec_PLs <- rbind(vectorized_PLs1, vectorized_PLs2)
-vec_PLs <- vec_PLs[, colSums(abs(vectorized_PLs)) != 0] #remove zero columns
+vec_PLs <- vec_PLs[, colSums(abs(vec_PLs)) != 0] #remove zero columns
 vec_PLs <- scale(vec_PLs) #scaling speeds up computation
 p_value <- permutation_test(vec_PLs[1:nrow(vectorized_PLs1),], vec_PLs[(nrow(vectorized_PLs1)+1):nrow(vec_PLs),])
 print(sprintf("p-value %f:", p_value))
