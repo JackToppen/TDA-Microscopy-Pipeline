@@ -1,4 +1,4 @@
-# Topological Data Analysis for human induced pluripotent stem cell colonies
+# Topological Data Analysis of pattern formation of human induced pluripotent stem cell colonies
 
 ------------------------------------------------------------------------
 
