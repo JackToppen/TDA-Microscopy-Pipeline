@@ -14,7 +14,7 @@ install.packages(c("Rcpp", "TDA"))
 ------------------------------------------------------------------------
 ## Load libraries
 
-```{r}
+```{r, include=FALSE}
 library("Rcpp")
 library("TDA")
 library("tdatools")
@@ -31,6 +31,9 @@ source("utilities.R")
 ## Load data
 
 ```{r}
+#specify the working directory path
+working_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/TDA"
+
 # specify location path of discretized CSVs
 #csv_dir_path <- "~/Research/TDA/TDA-new/Discretized-CSVs/75/Nanog_Gata6/1"
 csv_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Discretized-images/25"
@@ -68,9 +71,16 @@ for (i in 1:length(files)){
   max_death[[i]] <- max(PDs[[i]]$pairs[[2]][,2])
 }
 
+max_birth <- max(unlist(max_birth))
+max_death <- max(unlist(max_death))
+
+#create a folder for the saved computations
+dir.create("saved_computations")
+
 #save the list of persistence diagrams, the max birth and max death values
-save_PD_filename <-  "persistence-diagrams.RData" #name of the file
-save_PD_file_location <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/" #location where to save the file
+save_PD_filename <-  "persistence-diagrams.RData" 
+save_PD_file_location <- paste0(working_dir_path, "/saved_computations/") 
+
 save(PDs, max_birth, max_death, file=paste0(save_PD_file_location,save_PD_filename))
 ```
 
@@ -83,8 +93,6 @@ par(pty="s") #makes a square plot
 #load saved persistence diagrams
 load(paste0(save_PD_file_location,save_PD_filename))
 
-max_birth <- max(unlist(max_birth))
-max_death <- max(unlist(max_death))
 max_radius <- max(max_birth, max_death)
 for (i in 1:length(files)){
   plot_diagram(PDs[[i]]$pairs[[2]], max_radius)
@@ -179,7 +187,7 @@ vectorized_PLs <- vectorize_landscapes(PLs, PL_depth_cap)
 
 #save PLs 
 save_PL_filename <-  "vectorized-landscapes.RData"
-save_PL_file_location <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/"
+save_PD_file_location <- paste0(working_dir_path, "/saved_computations/") 
 save(vectorized_PLs, file=paste0(save_PL_file_location,save_PL_filename))
 ```
 
