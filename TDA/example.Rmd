@@ -67,7 +67,7 @@ for (i in 1:length(files)){
   max_death[[i]] <- max(PDs[[i]]$pairs[[2]][,2])
 }
 
-#save list of persistence diagrams (persistence computations might take look for a large data set so we recommend to save them)
+#save list of persistence diagrams (persistence computations might take long for a large data set so we recommend to save them)
 save_filename <-  "persistence-diagrams.RData"
 save_file_location <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/"
 save(PDs, file=paste0(save_file_location,save_filename))
