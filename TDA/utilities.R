@@ -19,6 +19,7 @@ concat_path <- function(path, filename) {
 
 #plot persistence diagrams
 plot_diagram <- function(pairs, dgm_max){
+  par(pty="s")
   finite_points <- matrix(pairs[pairs[,2] != Inf], ncol=2)
   #line below is needed if we compute homology in degree 0 
   #because we might have path connected components that die at infinity
@@ -50,6 +51,7 @@ landscape0 <- function(data, degree, exact=FALSE, dx, min_x, max_x){
 
 #plot PL using color scheme
 plot_landscape <- function(landscape, x_max, y_max){
+  par(pty="s")
   internal <- landscape$getInternal()
   infinity_sub <- -1
   line_width <- 1
@@ -78,6 +80,7 @@ plot_landscape <- function(landscape, x_max, y_max){
 
 #plot PL from depth d1 to depth d2 using color scheme
 plot_landscape_depths <- function(landscape, d1, d2, x_max, y_max){
+  par(pty="s")
   internal <- landscape$getInternal()
   infinity_sub <- -1
   line_width <- 1
@@ -182,6 +185,9 @@ euclidean.distance <- function(u, v) sqrt(sum((u - v) ^ 2))
 #permutation test on two groups of data that are saved as matrices
 permutation_test <- function(group1, group2, nrepeats = 10000){
   M <- rbind(group1, group2)
+  M <- M[, colSums(abs(M)) != 0] #removes zero columns
+  M <- scale(M) #scaling speeds up computation
+  
   n <- nrow(M) # number of total data points
   k <- nrow(group1) # number of data points in first group
   observation <- euclidean.distance(colMeans(group1),colMeans(group2))
@@ -192,5 +198,124 @@ permutation_test <- function(group1, group2, nrepeats = 10000){
     if (distance >= observation)
       ngreater_distances <- ngreater_distances + 1
   }
-  return(ngreater_distances/nrepeats)
+  return(print(sprintf("p-value %f:", ngreater_distances/nrepeats)))
+}
+
+#####################additional functions for example.Rmd################
+
+#compute a list of persistence diagrams and save them
+save_diagrams_list <- function(data_files, csv_files_path, save_filename, save_file_location){
+  PDs <- list()
+  max_birth <- list() 
+  max_death <- list() 
+  for (i in 1:length(data_files)){
+    print(sprintf("Processing file %s", data_files[i]))
+    path <- concat_path(csv_files_path, data_files[i])
+    cells <- read.csv(path)
+    #compute persistence homology using Alpha complex which is also known as Delaunay complex
+    PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
+    #convert persistence diagrams to tdatools data structure
+    PDs[[i]] <- gudhi2tdatools(PH$diagram)
+    #birth and death values have been squared, so take the square root
+    PDs[[i]]$pairs[[1]] <- sqrt(PDs[[i]]$pairs[[1]]) #homology in degree 0 
+    #####################since we don't use H0 I can remove the above line################
+    PDs[[i]]$pairs[[2]] <- sqrt(PDs[[i]]$pairs[[2]]) #homology in degree 1
+    #max birth of 1-degree persistence diagrams 
+    max_birth[[i]] <- max(PDs[[i]]$pairs[[2]][,1])
+    #max death of 1-degree persistence diagrams 
+    max_death[[i]] <- max(PDs[[i]]$pairs[[2]][,2])
+  }
+  
+  max_birth <- max(unlist(max_birth))
+  max_death <- max(unlist(max_death))
+  
+  #save the list of persistence diagrams, the max birth and max death values
+  save(PDs, max_birth, max_death, file=paste0(save_file_location,save_filename))
+}
+
+plot_diagrams_from_list <- function(PDs_list, number_of_files, birth, death){
+  par(pty="s")
+  max_radius <- max(birth, death)
+  for (i in 1:number_of_files){
+    plot_diagram(PDs_list[[i]]$pairs[[2]], max_radius)
+  }
+}
+
+
+#plot representative cycles that persist (live) over a certain threshold
+plot_representative_cycles <- function(data_files, csv_files_path, threshold){
+  par(pty="s")
+  for (i in 1:length(data_files)){
+    print(sprintf("Processing file %s", data_files[i]))
+    path <- concat_path(csv_files_path, data_files[i])
+    cells <- read.csv(path)
+    #compute persistence homology using Alpha complex which is also known as Delaunay complex
+    filtration <- alphaComplexFiltration(cells[,1:2], printProgress = TRUE)
+    PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
+    PD <- PH[["diagram"]]
+    #plot cycles that persist over specific persistence_param
+    ones <- which(PD[,1] == 1)
+    if (length(ones) > 1 ){
+      plot(filtration[["coordinates"]], pch = 19, cex=0.1, ylab="", xlab="", axes = FALSE)
+      for (m in ones[1]:(length(ones)+ones[1]-1)){
+        cycles <- PH[["cycleLocation"]][m]
+        if ((sqrt(PD[m,3]) - sqrt(PD[m,2])  > threshold) ){
+          for (s in 1:length(cycles)){
+            for (l in 1:dim(cycles[[s]])[1]){
+              lines(cycles[[s]][l,,], col="blue", lwd=1)
+            }
+          } 
+        } 
+      }
+    }
+  }
+}
+
+#compute a list of persistence landscapes
+landscapes_list <- function(PDs_list, number_of_files, birth, death, step){
+  x <- (death+birth)/2 + 5
+  PLs <- list()
+  for (i in 1:number_of_files){ 
+    PLs[[i]] <- landscape0(PDs_list[[i]]$pairs[[2]], degree=1, exact=FALSE, dx=step, min_x=0, max_x=x)
+  }
+  return(PLs) 
+}
+
+#plot a list of persistence landscapes
+plot_landscapes_from_list <- function(PLs_list,number_of_files, birth, death){
+  par(pty="s")
+  max_x <- (death+birth)/2 + 5
+  max_height <- death/2 
+  for (i in 1:number_of_files){ 
+    plot_landscape(PLs_list[[i]], max_x, max_height)
+  }
+}
+
+#compute the maximum PLs depth
+max_PL_depth <- function(PLs_list, data_files){
+  max_depth <- 0 # highest number of landscapes per diagram
+  min_depth <- Inf # lowest number of landscapes per diagram
+  for (i in 1:length(data_files)){ 
+    depth <- dim(PLs_list[[i]]$getInternal())[1]
+    max_depth <- max(max_depth, depth)
+    if (depth > 1) { # nonzero landscape
+      min_depth <- min(min_depth, depth)
+    }
+  }
+  return(max_depth)
+}
+
+#compute the average persistence landscape
+average_persistence_landscape <- function(PLs_list, number_of_files){
+  PL_sum <- PLs_list[[1]]
+  for (i in 2:number_of_files){
+    PL_sum <- PLsum(PL_sum, PLs_list[[i]])
+  }
+  avgPL <- PLscale(1/number_of_files, PL_sum)
+}
+
+#save the vectorized persistence landscapes
+save_vectorized_landscapes <- function(PLs, max_depth, save_filename, save_file_location){
+  vectorized_PLs <- vectorize_landscapes(PLs, PL_depth_cap)
+  save(vectorized_PLs, file=paste0(save_file_location,save_filename))
 }
