@@ -35,160 +35,84 @@ source("utilities.R")
 working_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/TDA"
 
 # specify location path of discretized CSVs
-#csv_dir_path <- "~/Research/TDA/TDA-new/Discretized-CSVs/75/Nanog_Gata6/1"
 csv_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Discretized-images/25"
+
 
 # recursively finds CSV files within directory and returns file-names in a list
 files <- get_csvs(csv_dir_path)
+#number of files
+nfiles <- length(files)
 ```
 
-## Compute persistence diagrams
-
+## Compute persistence diagrams and save them
 *We use Alpha filtration to compute persistence diagrams*
-*For two-dimensional data computing Alpha filtration is faster than computing Vietoris-Rips filtration*
 *Since persistence computations might take long time to compute for a large data set, we recommend saving them*
 
 ```{r}
-#list of persistence diagrams for each file
-PDs <- list()
-max_birth <- list() 
-max_death <- list() 
-for (i in 1:length(files)){
-  print(sprintf("Processing file %s", files[i]))
-  path <- concat_path(csv_dir_path, files[i])
-  cells <- read.csv(path)
-  #compute persistence homology using Alpha complex which is also known as Delaunay complex
-  PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
-  #convert persistence diagrams to tdatools data structure
-  PDs[[i]] <- gudhi2tdatools(PH$diagram)
-  #birth and death values have been squared, so take the square root
-  PDs[[i]]$pairs[[1]] <- sqrt(PDs[[i]]$pairs[[1]]) #homology in degree 0 
-  #####################since we don't use H0 I can remove the above line################
-  PDs[[i]]$pairs[[2]] <- sqrt(PDs[[i]]$pairs[[2]]) #homology in degree 1
-  #max birth of 1-degree persistence diagrams 
-  max_birth[[i]] <- max(PDs[[i]]$pairs[[2]][,1])
-  #max death of 1-degree persistence diagrams 
-  max_death[[i]] <- max(PDs[[i]]$pairs[[2]][,2])
-}
-
-max_birth <- max(unlist(max_birth))
-max_death <- max(unlist(max_death))
-
 #create a folder for the saved computations
 dir.create("saved_computations")
 
-#save the list of persistence diagrams, the max birth and max death values
-save_PD_filename <-  "persistence-diagrams.RData" 
-save_PD_file_location <- paste0(working_dir_path, "/saved_computations/") 
+#name a file where to store persistence diagrams
+save_PD_filename <-  "persistence-diagrams.RData"
 
-save(PDs, max_birth, max_death, file=paste0(save_PD_file_location,save_PD_filename))
+save_diagrams_list(files, csv_dir_path, save_PD_filename, paste0(working_dir_path, "/saved_computations/"))
 ```
 
-## Plot persistence diagrams
-**The scale of all plots are the same and is determined by max birth and max death radii**
+## Plot persistence diagrams 
+**The scale of all plots are the same and is determined by max birth and max death values**
 
 ```{r}
-par(pty="s") #makes a square plot 
-
 #load saved persistence diagrams
 load(paste0(save_PD_file_location,save_PD_filename))
 
-max_radius <- max(max_birth, max_death)
-for (i in 1:length(files)){
-  plot_diagram(PDs[[i]]$pairs[[2]], max_radius)
-}
+plot_diagrams_from_list(PDs, nfiles, max_birth, max_death)
 ```
 
 ## Plot representative cycles that persist (live) over a certain threshold
 
 ```{r}
-par(pty="s")
-
 #choose persistence threshold
-persist_threshold <- 20 
+persistence_threshold <- 20 
 
-for (i in 1:length(files)){
-  print(sprintf("Processing file %s", files[i]))
-  path <- concat_path(csv_dir_path, files[i])
-  cells <- read.csv(path)
-  #compute persistence homology using Alpha complex which is also known as Delaunay complex
-  filtration <- alphaComplexFiltration(cells[,1:2], printProgress = TRUE)
-  PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
-  PD <- PH[["diagram"]]
-  #plot cycles that persist over specific persistence_param
-  #par(mfrow = c(1, 1))
-  ones <- which(PD[,1] == 1)
-  if (length(ones) > 1 ){
-    plot(filtration[["coordinates"]], pch = 19, cex=0.1, ylab="", xlab="", axes = FALSE)
-    for (m in ones[1]:(length(ones)+ones[1]-1)){
-      cycles <- PH[["cycleLocation"]][m]
-      if ((sqrt(PD[m,3]) - sqrt(PD[m,2])  > persist_threshold) ){
-        for (s in 1:length(cycles)){
-          for (l in 1:dim(cycles[[s]])[1]){
-            lines(cycles[[s]][l,,], col="darkorchid1", lwd=1)
-          }
-        } 
-      } 
-    }
-  }
-}
+plot_representative_cycles(files, csv_dir_path, persistence_threshold)
 ```
 
-## Compute persistence landscapes and plot them
+## Compute persistence landscapes
 
 ```{r}
-par(pty="s")
+#choose a discretization step
+discretization_step <- 0.4 
 
-dx <- 0.4 #discretization step
-max_x <- (max_death+max_birth)/2 + 5
-max_height <- max_death/2 
-max_PL_depth <- 0 # highest number of landscapes per diagram
-min_PL_depth <- Inf # lowest number of landscapes per diagram
-
-PLs <- list()
-for (i in 1:length(files)){ 
-  PLs[[i]] <- landscape0(PDs[[i]]$pairs[[2]], degree=1, exact=FALSE, dx=dx, min_x=0, max_x=max_x)
-    #plot all depth of a PL
-    plot_landscape(PLs[[i]], max_x, max_height)
-    
-    #plot a range of depths of a PL
-    #plot_landscape_levels(PLs[[i]], 1, 30, max_x, max_height)
-    
-    depth <- dim(PLs[[i]]$getInternal())[1]
-    max_PL_depth <- max(max_PL_depth, depth)
-    if (depth > 1) { # nonzero landscape
-      min_PL_depth <- min(min_PL_depth, depth)
-    }
-}
-
-print(sprintf("min_PL_depth=%i, max_PL_depth=%i", min_PL_depth, max_PL_depth))
+PLs <- landscapes_list(PDs, nfiles, max_birth, max_death, discretization_step)
 ```
 
-## Compute the average PL and plot it
+## Plot persistence landscapes
 
 ```{r}
-par(pty="s")
+plot_landscapes_from_list(PLs, nfiles, max_birth, max_death)
+```
 
-PL_sum <- PLs[[1]]
-for (i in 2:length(files)){
-  PL_sum <- PLsum(PL_sum, PLs[[i]])
-}
+## Plot the average PL
 
-avgPL <- PLscale(1/length(files), PL_sum)
-plot_landscape(avgPL, max_x, max_height)
+```{r}
+plot_landscape(average_persistence_landscape(PLs, nfiles),(max_death+max_birth)/2 + 5, max_death/2 )
 ```
 
 ## Save each PL as a vector 
 **Store the list of PLs as a matrix where rows correspond to PLs**
 
 ```{r}
-PL_depth_cap <- 30 # choose how many depth of a PL you want to use for further analysis
-vectorized_PLs <- vectorize_landscapes(PLs, PL_depth_cap)
-
-#save PLs 
+#name a file where to store vectorized persistence landscapes
 save_PL_filename <-  "vectorized-landscapes.RData"
-save_PD_file_location <- paste0(working_dir_path, "/saved_computations/") 
-save(vectorized_PLs, file=paste0(save_PL_file_location,save_PL_filename))
+
+# choose how many non-zero landscapes starting from the first one 
+#you want to choose for further analysis (i.e. depth cap)
+#Note that if this number is larger than the total number of non-zero landscapes than the total number of non-zero landscapes will be chosen as a depth cap
+PL_depth_cap <- 30 
+
+max_depth <- max_PL_depth(PLs, files)
+PL_depth_cap <- min(PL_depth_cap, max_depth)
+save_vectorized_landscapes(PLs, max_PL_depth, save_PL_filename, paste0(working_dir_path, "/saved_computations/"))
 ```
 
 ## Perform a permutation test on PLs
@@ -196,13 +120,9 @@ save(vectorized_PLs, file=paste0(save_PL_file_location,save_PL_filename))
 
 ```{r}
 #load saved vectorized PLs of two groups
-load(paste0(save_PL_file_location1,save_PL_filename1))
-load(paste0(save_PL_file_location2,save_PL_filename2))
+load(paste0(paste0(working_dir_path, "/saved_computations/"),save_PL_filename))
+load(paste0(paste0(working_dir_path, "/saved_computations/"),save_PL_filename))
 
-vec_PLs <- rbind(vectorized_PLs1, vectorized_PLs2)
-vec_PLs <- vec_PLs[, colSums(abs(vec_PLs)) != 0] #remove zero columns
-vec_PLs <- scale(vec_PLs) #scaling speeds up computation
-p_value <- permutation_test(vec_PLs[1:nrow(vectorized_PLs1),], vec_PLs[(nrow(vectorized_PLs1)+1):nrow(vec_PLs),])
-print(sprintf("p-value %f:", p_value))
+permutation_test(vectorized_PLs, vectorized_PLs)
 ```
 
