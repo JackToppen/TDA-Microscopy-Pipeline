@@ -278,7 +278,7 @@ landscape0 <- function(data, degree, exact=FALSE, dx, min_x, max_x){
 }
 
 #plot PL using color scheme
-plot_landscape <- function(landscape, x_max, y_max){
+plot_landscape <- function(landscape, x_max, y_min, y_max){
   par(pty="s")
   internal <- landscape$getInternal()
   infinity_sub <- -1
@@ -294,7 +294,7 @@ plot_landscape <- function(landscape, x_max, y_max){
   } 
   #plot PL with specific limits of x-axis and y-axis
   else { 
-    plot(depth_1[,1],depth_1[,2], xlim=c(0, x_max) , ylim=c(0, y_max), type='l', ann=FALSE, bty="o",col=mycolors[1], lwd=line_width)
+    plot(depth_1[,1],depth_1[,2], xlim=c(0, x_max) , ylim=c(y_min, y_max), type='l', ann=FALSE, bty="o",col=mycolors[1], lwd=line_width)
   }
   
   #plot PL at other depths
