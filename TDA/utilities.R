@@ -1,4 +1,10 @@
 
+#Some functions here are from Peter Bubenik's labs that can be found at 
+#https://people.clas.ufl.edu/peterbubenik/intro-to-tda/
+
+#Also, some functions are adapted from 
+#https://github.com/althomas/tda-for-worm-behavior
+
 
 get_csvs <- function(path) {
     # get list of discretized CSVs recursively
@@ -222,8 +228,6 @@ permutation_test_for_PLs <- function(PL1, PL2, nrepeats = 10000){
   PL2_matrix <- cbind(PL2_matrix, Matrix(0,nrow=nrow(PL2_matrix),ncol=num_columns-ncol(PL2_matrix)))
   
   M <- rbind(PL1_matrix, PL2_matrix)
-  M <- M[, colSums(abs(M)) != 0] #removes zero columns
-  M <- scale(M) #scaling speeds up computation
   n <- nrow(M) # number of total data points
   k <- nrow(PL1_matrix) # number of data points in first group
   observation <- euclidean_distance(colMeans(PL1_matrix),colMeans(PL2_matrix))
@@ -360,26 +364,26 @@ gudhi2tdatools <- function(gudhi_dgm) {
   return(tdatools_dgm)
 }
 
-#############statistics functions ####################
-
 #Euclidean distance between two vectors 
 euclidean_distance <- function(u, v) sqrt(sum((u - v) ^ 2))
 
 #permutation test on two groups of data that are saved as matrices
-permutation_test <- function(group1, group2, nrepeats = 10000){
-  M <- rbind(group1, group2)
-  M <- M[, colSums(abs(M)) != 0] #removes zero columns
-  M <- scale(M) #scaling speeds up computation
-  n <- nrow(M) # number of total data points
-  k <- nrow(group1) # number of data points in first group
-  observation <- euclidean_distance(colMeans(group1),colMeans(group2))
-  ngreater_distances <- 0
-  for (i in 1:nrepeats){
+permutation_test <- function(group1 , group2, num.repeats = 10000){
+  # append zeros if necessary so that the matrices have the same number of columns
+  num.columns <- max(ncol(group1),ncol(group2))
+  group1 <- cbind(group1, Matrix(0,nrow=nrow(group1),ncol=num.columns-ncol(group1)))
+  group2 <- cbind(group2, Matrix(0,nrow=nrow(group2),ncol=num.columns-ncol(group2)))
+  t.obs <- euclidean.distance(colMeans(group1),colMeans(group2))
+  k <- dim(group1)[1]
+  M <- rbind(group1,group2)
+  n <- dim(M)[1]
+  count <- 0
+  for (i in 1:num.repeats){
     permutation <- sample(1:n)
-    distance <- euclidean.distance(colMeans(M[permutation[1:k],]),colMeans(M[permutation[(k+1):n],]))
-    if (distance >= observation)
-      ngreater_distances <- ngreater_distances + 1
+    t <- euclidean.distance(colMeans(M[permutation[1:k],]),colMeans(M[permutation[(k+1):n],]))
+    if (t >= t.obs)
+      count <- count + 1
   }
-  return(print(sprintf("p-value %f:", ngreater_distances/nrepeats)))
+  return(count/num.repeats)
 }
 
