@@ -1,5 +1,5 @@
 # Topological Data Analysis of discretized microscopy images
-# Iryna Hartsock, Februrary 2023
+# Iryna Hartsock, February 2023
 ------------------------------------------------------------------------
 
 #### Dependencies
