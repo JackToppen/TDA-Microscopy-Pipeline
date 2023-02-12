@@ -1,5 +1,5 @@
 # Topological Data Analysis of pattern formation of human induced pluripotent stem cell colonies
-
+# Iryna Hartsock, February 2023
 ------------------------------------------------------------------------
 
 #### Dependencies
@@ -20,8 +20,8 @@ library("Rcpp")
 library("TDA")
 library("tdatools")
 ```
-## Functions
 
+## Functions
 *Pull generalized functions for TDA computations and for processing the CSV files from the discretization pipeline.*
 
 ```{r}
@@ -100,8 +100,8 @@ for (i in 1:length(files)){
   for (k in 1:sqrt(npatches)){ #y-axis
     for (j in 1:sqrt(npatches)){ #x-axis
       all_cells <- read.csv(file=paste0(csv_dir_path,files[[i]]), header=TRUE)
-      #every image is approximately 2850x2850 pixels
-      #every patch is 712.5x712.5 pixels
+      #every image is approximately 2850x2850 
+      #every patch is 712.5x712.5 
       all_cells <- all_cells[which( (2850/sqrt(npatches))*(j-1) <= all_cells[,1] & all_cells[,1] < (2850/sqrt(npatches))*j & (2850/sqrt(npatches))*(k-1) <= all_cells[,2] & all_cells[,2] < (2850/sqrt(npatches))*k),]
       cells <- all_cells[ which(all_cells[,8]== type), ]               
       #compute persistence homology using Alpha complex which is also known as Delaunay complex
@@ -148,7 +148,7 @@ save_PD_file_location <- paste0(working_dir_path, "/saved_computations/")
 save(PDs, max_birth, max_death, file=paste0(save_file_location,save_filename)) 
 ```
 
-## Plot a persistence diagram
+## Plot persistence diagrams
 
 ```{r}
 par(pty="s") #makes a square plot 
@@ -162,10 +162,129 @@ for (i in 1:length(files)){
 }
 ```
 
-## Compute persistence landscapes
+## Compute and plot persistence landscapes
 
 ```{r}
-
+max_x <- (max_death+max_birth)/2 + 5
+PLs <- list()
+for (i in 1:length(files)){ 
+  PLs[[i]] <- list()
+  for (k in 1:npatches){
+    PLs[[i]][[k]] <- landscape0(PDs[[i]][[k]]$pairs[[2]], degree=1, exact=FALSE, dx=dx, min_x=0, max_x=max_x)
+    plot_landscape(PLs[[i]][[k]], max_x, 0, max_death/2)
+  }
+}
 ```
 
+## Compute and plot average persistence landscapes for each Dox concentration
+
 ```{r}
+par(pty="s")
+
+PLs_list <- list()
+for (j in 1:ncohorts){
+  PLs_list[[j]] <- list()
+  for (c in 1:nconcentrations){
+    PLs_list[[j]][[c]] <- list()
+    for (i in 1:nimages){
+      for (k in 1:npatches){
+        PLs_list[[j]][[c]] <- append(PLs_list[[j]][[c]],PLs[[nimages*(c-1)+(j-1)*nimages*nconcentrations+i]][[k]])
+      }
+    }
+  }
+}
+
+PLs_avg <- list()
+for (j in 1:ncohorts){
+  if (j == 1){
+    cohort <- "Gata6" 
+  } else {
+    cohort <- "HA" 
+  }
+  PLs_avg[[j]] <- list()
+  for (c in 1:nconcentrations){
+    if (c==1){
+      concentration <- 0
+    } else if (c==2){
+      concentration <- 5
+    } else if (c==3){
+      concentration <- 15
+    } else {concentration <- 25 }
+    PL_sum <- PLs_list[[j]][[c]][[1]]
+    for (i in 2:length(PLs_list[[j]][[c]])){
+      PL_sum <- PLsum(PL_sum, PLs_list[[j]][[c]][[i]])
+    }
+    PLs_avg[[j]][[c]]<- PLscale(1/(length(PLs_list[[j]][[c]])), PL_sum)
+    plot_landscape(PLs_avg[[j]][[c]], max_x, 0, max_death/2)
+    title(main=sprintf("Average PL for %s concentration %1.0f ng/ml",cohort, concentration)) 
+  }
+}
+```
+
+## Plot the difference between pan-GATA6 and HA average persistence landscape for each Dox concentration
+
+```{r}
+par(pty="s")
+for (c in 1:nconcentrations){
+   if (c==1){
+      concentration <- 0
+    } else if (c==2){
+      concentration <- 5
+    } else if (c==3){
+      concentration <- 15
+    } else {concentration <- 25 }
+    plot_landscape(PLsum(PLs_avg[[1]][[c]],PLscale(-1,PLs_avg[[2]][[c]])), max_x, -max_death/2, max_death/2)
+    title(main=sprintf("Gata6 vs HA concentration %1.0f ng/ml",concentration)) 
+}
+```
+
+## Plot the difference between average persistence landscapes of distinct Dox concentrations
+
+```{r}
+for (j in 1:ncohorts){
+  par(pty="s")
+  if (j == 1){
+    cohort <- "Gata6" 
+  } else {
+    cohort <- "HA"
+  }
+  plot_landscape(PLsum(PLs_avg[[j]][[1]],PLscale(-1,PLs_avg[[j]][[2]])), max_x, -max_death/2, max_death/2)
+  title(main=sprintf("%s concentration 0 vs 5 ng/ml",cohort)) 
+  plot_landscape(PLsum(PLs_avg[[j]][[1]],PLscale(-1,PLs_avg[[j]][[3]])), max_x, -max_death/2, max_death/2)
+  title(main=sprintf("%s concentration 0 vs 15 ng/ml",cohort)) 
+  plot_landscape(PLsum(PLs_avg[[j]][[1]],PLscale(-1,PLs_avg[[j]][[4]])), max_x, -max_death/2, max_death/2)
+  title(main=sprintf("%s concentration 0 vs 25 ng/ml",cohort)) 
+  plot_landscape(PLsum(PLs_avg[[j]][[2]],PLscale(-1,PLs_avg[[j]][[3]])), max_x, -max_death/2, max_death/2)
+  title(main=sprintf("%s concentration 5 vs 15 ng/ml",cohort)) 
+  plot_landscape(PLsum(PLs_avg[[j]][[2]],PLscale(-1,PLs_avg[[j]][[4]])), max_x, -max_death/2, max_death/2)
+  title(main=sprintf("%s concentration 5 vs 25 ng/ml",cohort)) 
+  plot_landscape(PLsum(PLs_avg[[j]][[3]],PLscale(-1,PLs_avg[[j]][[4]])), max_x, -max_death/2, max_death/2)
+  title(main=sprintf("%s concentration 15 vs 25 ng/ml",cohort)) 
+} 
+```
+
+## Vectorize persistence landscapes 
+
+```{r}
+#choose a max PL depth 
+PL_max_depth <- 30
+
+vectorized_PLs <- vectorize_landscapes(PLs[[1]], PL_max_depth)
+for (i in 2:length(files)){
+  vectorized_PLs <- rbind(vectorized_PLs, vectorize_landscapes(PLs[[i]], PL_max_depth))
+}
+
+if (cell_type == "R+G-"){
+  vec_red <- vectorized_PLs
+  PL_length_red <- landscape_length
+} else if (cell_type == "R-G+"){
+  vec_gr <- vectorized_PLs
+  PL_length_gr <- landscape_length
+} else if (cell_type == "R+G+"){
+  vec_pos <- vectorized_PLs
+  PL_length_pos <- landscape_length
+} else if (cell_type == "R-G-"){
+  vec_neg <- vectorized_PLs
+  PL_length_neg <- landscape_length
+}
+```
