@@ -33,7 +33,7 @@ remove_dimzero_from_diagrams <- function(PD){
 }
 
 #compute and save a list of persistence diagrams
-diagrams_list <- function(data_files, csv_files_path, save_filename, save_file_location){
+diagrams_list <- function(data_files, cell_types, csv_files_path, save_filename, save_file_location){
   PDs <- list()
   max_birth <- list() 
   max_death <- list() 
@@ -41,6 +41,7 @@ diagrams_list <- function(data_files, csv_files_path, save_filename, save_file_l
     print(sprintf("Processing file %s", data_files[i]))
     path <- concat_path(csv_files_path, data_files[i])
     cells <- read.csv(path)
+    cells <- cells[which(is.element(cells[,8], cell_types)),]
     #compute persistence homology using Alpha complex which is also known as Delaunay complex
     PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
     PDs[[i]] <- PH[["diagram"]]
@@ -73,12 +74,13 @@ plot_diagrams_from_list <- function(PD_list, number_of_files, birth, death){
 
 
 #plot representative cycles that persist (live) over a certain threshold
-plot_representative_cycles <- function(data_files, csv_files_path, threshold){
+plot_representative_cycles <- function(data_files, cell_types, csv_files_path, threshold){
   par(pty="s")
   for (i in 1:length(data_files)){
     print(sprintf("Processing file %s", data_files[i]))
     path <- concat_path(csv_files_path, data_files[i])
     cells <- read.csv(path)
+    cells <- cells[which(is.element(cells[,8], cell_types)),]
     #compute persistence homology using Alpha complex which is also known as Delaunay complex
     filtration <- alphaComplexFiltration(cells[,1:2], printProgress = TRUE)
     PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
