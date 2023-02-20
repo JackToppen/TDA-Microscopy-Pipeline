@@ -11,7 +11,6 @@ get_csvs <- function(path) {
     files <- list.files(path, pattern="\\.csv$", include.dirs=TRUE, recursive=TRUE)
 }
 
-
 concat_path <- function(path, filename) {
   # make sure path has file separator at the end
   n <- nchar(path)
@@ -23,7 +22,7 @@ concat_path <- function(path, filename) {
   return(paste0(path, filename))
 }
 
-############tda functions for example.Rmd#######################################
+############tda functions for general_pipeline.Rmd#######################################
 
 # remove dimension zero points from a persistence diagram
 remove_dimzero_from_diagrams <- function(PD){
@@ -71,7 +70,6 @@ plot_diagrams_from_list <- function(PD_list, number_of_files, birth, death){
     abline(0,1)
   }
 }
-
 
 #plot representative cycles that persist (live) over a certain threshold
 plot_representative_cycles <- function(data_files, cell_types, csv_files_path, threshold){
@@ -173,7 +171,6 @@ average_persistence_landscape <- function(PL_list, birth, death, save_filename, 
   return(average_PL)
 }
 
-
 #plot the average persistence landscape
 plot_average_persistence_landscape <- function(average_PL, birth, death, discr_step){
   max_x <- (death+birth)/2 + 5
@@ -243,7 +240,7 @@ permutation_test_for_PLs <- function(PL1, PL2, nrepeats = 10000){
   return(print(sprintf("p-value %f:", ngreater_distances/nrepeats)))
 }
 
-############tda functions for main.Rmd ('tda-tools' package needed)###########
+############tda functions for hipsc_pipeline.Rmd ('tda-tools' package needed)###########
 
 #plot persistence diagrams
 plot_diagram <- function(pairs, dgm_max){
