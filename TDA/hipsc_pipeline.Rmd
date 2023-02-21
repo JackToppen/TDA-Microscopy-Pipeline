@@ -102,8 +102,7 @@ for (i in 1:length(files)){
   for (k in 1:sqrt(npatches)){ #y-axis
     for (j in 1:sqrt(npatches)){ #x-axis
       all_cells <- read.csv(file=paste0(csv_dir_path,files[[i]]), header=TRUE)
-      #every image is approximately 2850x2850 
-      #every patch is 712.5x712.5 
+      #every image is ~2850x2850 pixels
       all_cells <- all_cells[which( (2850/sqrt(npatches))*(j-1) <= all_cells[,1] & all_cells[,1] < (2850/sqrt(npatches))*j & (2850/sqrt(npatches))*(k-1) <= all_cells[,2] & all_cells[,2] < (2850/sqrt(npatches))*k),]
       cells <- all_cells[ which(all_cells[,8]== type), ]               
       #compute persistence homology using Alpha complex which is also known as Delaunay complex
@@ -288,6 +287,61 @@ if (cell_type == "R+G-"){
 } else if (cell_type == "R-G-"){
   vec_neg <- vectorized_PLs
   PL_length_neg <- landscape_length
+}
+```
+
+## Compute cell count vectors for every cell type
+
+```{r}
+cell_number_r <- list()
+cell_number_gr <- list()
+cell_number_pos <- list()
+cell_number_neg <- list()
+for (j in 1:ngroups){         #j=1 pan-Gata6, j=2 HA
+  cell_number_r[[j]] <- list()
+  cell_number_gr[[j]] <- list()
+  cell_number_pos[[j]] <- list()
+  cell_number_neg[[j]] <- list()
+  for (c in 1:nconcentrations){             
+    cell_number_r[[j]][[c]]<- list()
+    cell_number_gr[[j]][[c]]<- list()
+    cell_number_pos[[j]][[c]]<- list()
+    cell_number_neg[[j]][[c]]<- list()
+    for (i in 1:nimages){             
+      all_cells <- read.csv(file=paste0(data_file_location,data_filenames[[i+(c-1)*nimages+(j-1)*nimages*nconcentrations]]), header=TRUE)
+      cell_number_r[[j]][[c]][[i]] <- list()
+      cell_number_gr[[j]][[c]][[i]] <- list()
+      cell_number_pos[[j]][[c]][[i]] <- list()
+      cell_number_neg[[j]][[c]][[i]] <- list()
+      for (k in 1:sqrt(npatches)){
+        for (r in 1:sqrt(npatches)){
+          #every image is ~2850x2850 
+          patch <- all_cells[which( ((2850/sqrt(npatches))*(r-1)) <= all_cells[,1] & all_cells[,1] < ((2850/sqrt(npatches))*r) & ((2850/sqrt(npatches))*(k-1)) <= all_cells[,2] & all_cells[,2] < ((2850/sqrt(npatches))*k)),]
+          #R+G- cell type
+          red_patch <- patch[ which((patch[,8]==1)), ] 
+          cell_number_r[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]] <- nrow(red_patch)
+          #R-G+ cell type
+          green_patch <- patch[ which((patch[,8]==10)), ] 
+          cell_number_gr[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]] <- nrow(green_patch)
+          #R+G+ cell type
+          pos_patch <- patch[ which((patch[,8]==11)), ] 
+          cell_number_pos[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]] <- nrow(pos_patch)
+          #R-G-cell type
+          neg_patch <- patch[ which((patch[,8]==0)), ] 
+          cell_number_neg[[j]][[c]][[i]][[r+(k-1)*sqrt(npatches)]] <- nrow(neg_patch)
+        }
+      }
+    }
+  }
+}
+
+#concatenate cell counts of each cell type into a single vector
+counts <- list()
+for (j in 1:ngroups){
+  counts[[j]] <- cbind(matrix(unlist(cell_number_r[[j]]), nrow=length(unlist(cell_number_r[[j]]))), 
+                       matrix(unlist(cell_number_gr[[j]]), nrow=length(unlist(cell_number_gr[[j]]))), 
+                       matrix(unlist(cell_number_pos[[j]]), nrow=length(unlist(cell_number_pos[[j]]))), 
+                       matrix(unlist(cell_number_neg[[j]]), nrow=length(unlist(cell_number_neg[[j]]))))
 }
 ```
 
@@ -508,7 +562,7 @@ for (i in 1:2){
 }
 ```
 
-## Predictions from SVR ploted as a box plot
+## SVR: Dox concentration predictions plotted as a boxplot
 
 ```{r}
 for (i in 1:2){
