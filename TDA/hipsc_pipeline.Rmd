@@ -40,6 +40,8 @@ concentrations <- c(0,5,15,25)
 groups <- c("Gata6","HA") 
 nconcentrations <- length(concentrations)
 ngroups <- length(groups)
+#percentile
+percentile <- 65
 #number of images per concentration
 nimages <- 15 
 #number of patches per image
@@ -59,14 +61,14 @@ npositions <- 5
 working_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/TDA"
 
 # specify location path of discretized CSVs
-csv_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/tda-old/data/75"
+csv_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/tda-old/data/"
 
 files <- list()
 for (j in groups){
   for (c in concentrations){ 
     for (w in 1:nwells){
       for (p in 1:npositions){
-        files <- append(files, paste0(percentile,"/Nanog_", j,"/", p, "/", c,"/Nanog_",j, "_",c,"_", w, "_", p, "/merged.csv"))
+        files <- append(files, paste0(percentile,"/Nanog_", j,"/", p, "/", c,"/", percentile, "_Nanog_",j, "_",c,"_", w, "_", p, ".csv"))
       }
     }
   }
@@ -143,9 +145,10 @@ remove(list=c("PH"))
 #create a folder for saved computations
 dir.create("saved_computations")
 
-#save the list of persistence diagrams, the max birth and max death values
-save_PD_filename <-  "persistence-diagrams.RData" 
-save_PD_file_location <- paste0(working_dir_path, "/saved_computations/") 
+#save the list of persistence diagrams, the max birth and max death values 
+#separately for each cell type
+save_filename <-  "persistence-diagrams-red.RData" 
+save_file_location <- paste0(working_dir_path, "/saved_computations/") 
 save(PDs, max_birth, max_death, file=paste0(save_file_location,save_filename)) 
 ```
 
@@ -166,6 +169,9 @@ for (i in 1:length(files)){
 ## Compute and plot persistence landscapes
 
 ```{r}
+#load saved persistence diagrams
+load(paste0(paste0(working_dir_path, "/saved_computations/"), "persistence-diagrams-red.RData"))
+
 max_x <- (max_death+max_birth)/2 + 5
 PLs <- list()
 for (i in 1:length(files)){ 
@@ -278,15 +284,35 @@ for (i in 2:length(files)){
 if (cell_type == "R+G-"){
   vec_red <- vectorized_PLs
   PL_length_red <- landscape_length
+  
+  #save the vectorized persistence landscapes and their length
+  save_filename <-  "PLs-red.RData" 
+  save_file_location <- paste0(working_dir_path, "/saved_computations/") 
+  save(vec_red, PL_length_red, file=paste0(save_file_location,save_filename)) 
 } else if (cell_type == "R-G+"){
   vec_gr <- vectorized_PLs
   PL_length_gr <- landscape_length
+  
+  #save the vectorized persistence landscapes and their length
+  save_filename <-  "PLs-gr.RData" 
+  save_file_location <- paste0(working_dir_path, "/saved_computations/") 
+  save(vec_gr, PL_length_gr, file=paste0(save_file_location,save_filename)) 
 } else if (cell_type == "R+G+"){
   vec_pos <- vectorized_PLs
   PL_length_pos <- landscape_length
+  
+  #save the vectorized persistence landscapes and their length
+  save_filename <-  "PLs-pos.RData" 
+  save_file_location <- paste0(working_dir_path, "/saved_computations/") 
+  save(vec_pos, PL_length_pos, file=paste0(save_file_location,save_filename)) 
 } else if (cell_type == "R-G-"){
   vec_neg <- vectorized_PLs
   PL_length_neg <- landscape_length
+  
+  #save the vectorized persistence landscapes and their length
+  save_filename <-  "PLs-neg.RData" 
+  save_file_location <- paste0(working_dir_path, "/saved_computations/") 
+  save(vec_neg, PL_length_neg, file=paste0(save_file_location,save_filename)) 
 }
 ```
 
@@ -343,6 +369,15 @@ for (j in 1:ngroups){
                        matrix(unlist(cell_number_pos[[j]]), nrow=length(unlist(cell_number_pos[[j]]))), 
                        matrix(unlist(cell_number_neg[[j]]), nrow=length(unlist(cell_number_neg[[j]]))))
 }
+```
+
+## Load saved vectorized persistence landscapes for every cell type
+
+```{r}
+load(paste0(paste0(working_dir_path, "/saved_computations/"), "PLs-red.RData"))
+load(paste0(paste0(working_dir_path, "/saved_computations/"), "PLs-gr.RData"))
+load(paste0(paste0(working_dir_path, "/saved_computations/"), "PLs-pos.RData"))
+load(paste0(paste0(working_dir_path, "/saved_computations/"), "PLs-neg.RData"))
 ```
 
 ## Permutation test
