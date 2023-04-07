@@ -107,7 +107,7 @@ for (i in 1:length(files)){
       #every image is ~2850x2850 pixels
       all_cells <- all_cells[which( (2850/sqrt(npatches))*(j-1) <= all_cells[,1] & all_cells[,1] < (2850/sqrt(npatches))*j & (2850/sqrt(npatches))*(k-1) <= all_cells[,2] & all_cells[,2] < (2850/sqrt(npatches))*k),]
       cells <- all_cells[ which(all_cells[,8]== type), ]               
-      #compute persistence homology using Alpha complex which is also known as Delaunay complex
+      #compute persistence homology using the Delaunay complex filtration (also known as Alpha complex filtration)
       PH[[i]][[j+(k-1)*sqrt(npatches)]] <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
     }
   } 

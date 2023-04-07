@@ -41,7 +41,7 @@ diagrams_list <- function(data_files, cell_types, csv_files_path, save_filename,
     path <- concat_path(csv_files_path, data_files[i])
     cells <- read.csv(path)
     cells <- cells[which(is.element(cells[,8], cell_types)),]
-    #compute persistence homology using Alpha complex which is also known as Delaunay complex
+    #compute persistence homology using Delaunay complex filtration (also known as Alpha complex filtration)
     PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
     PDs[[i]] <- PH[["diagram"]]
     PDs[[i]] <- remove_dimzero_from_diagrams(PDs[[i]])
@@ -61,7 +61,7 @@ diagrams_list <- function(data_files, cell_types, csv_files_path, save_filename,
   return(PDs)
 }
 
-#plot diagrams from a list
+#plot persistence diagrams from a list
 plot_diagrams_from_list <- function(PD_list, number_of_files, birth, death){
   par(pty="s")
   max_radius <- max(birth, death)
@@ -79,7 +79,7 @@ plot_representative_cycles <- function(data_files, cell_types, csv_files_path, t
     path <- concat_path(csv_files_path, data_files[i])
     cells <- read.csv(path)
     cells <- cells[which(is.element(cells[,8], cell_types)),]
-    #compute persistence homology using Alpha complex which is also known as Delaunay complex
+    #compute persistence homology using Delaunay complex filtration (also known as Alpha complex filtration)
     filtration <- alphaComplexFiltration(cells[,1:2], printProgress = TRUE)
     PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
     PD <- PH[["diagram"]]
@@ -171,7 +171,7 @@ average_persistence_landscape <- function(PL_list, birth, death, save_filename, 
   return(average_PL)
 }
 
-#plot the average persistence landscape
+#plot average persistence landscape
 plot_average_persistence_landscape <- function(average_PL, birth, death, discr_step){
   max_x <- (death+birth)/2 + 5
   radius_values <- seq(0, max_x, discr_step)
@@ -242,7 +242,7 @@ permutation_test_for_PLs <- function(PL1, PL2, nrepeats = 10000){
 
 ############tda functions for hipsc_pipeline.Rmd ('tda-tools' package needed)###########
 
-#plot persistence diagrams
+#plot persistence diagram
 plot_diagram <- function(pairs, dgm_max){
   par(pty="s")
   finite_points <- matrix(pairs[pairs[,2] != Inf], ncol=2)
@@ -264,8 +264,8 @@ plot_diagram <- function(pairs, dgm_max){
   abline(0,1)
 }
 
-#compute PL from persistence diagram
-# returns zero PL if persistence diagram is empty (instead of giving an error)
+#compute persistence landscape from a persistence diagram
+# returns zero persistence landscape if persistence diagram is empty (instead of giving an error)
 landscape0 <- function(data, degree, exact=FALSE, dx, min_x, max_x){
   if (length(data)==0) { # empty persistence diagram
     tdatools::landscape(matrix(0, nrow=1,ncol=2), degree=degree, exact=exact, dx=dx, min_x=min_x, max_x=max_x)
@@ -274,7 +274,7 @@ landscape0 <- function(data, degree, exact=FALSE, dx, min_x, max_x){
   }
 }
 
-#plot PL using color scheme
+#plot persistence landscape using color scheme
 plot_landscape <- function(landscape, x_max, y_min, y_max){
   par(pty="s")
   internal <- landscape$getInternal()
@@ -289,12 +289,12 @@ plot_landscape <- function(landscape, x_max, y_min, y_max){
   if ((missing(x_max) | missing(y_max))){ 
     plot(depth_1[,1], depth_1[,2], type='l', xlab='', ylab='', ann=FALSE, bty="o", col=mycolors[1], lwd=line_width)
   } 
-  #plot PL with specific limits of x-axis and y-axis
+  #plot persistence landscape with specific limits of x-axis and y-axis
   else { 
     plot(depth_1[,1],depth_1[,2], xlim=c(0, x_max) , ylim=c(y_min, y_max), type='l', ann=FALSE, bty="o",col=mycolors[1], lwd=line_width)
   }
   
-  #plot PL at other depths
+  #plot persistence landscape at other depths
   if (numLevels(internal) >1 ){
     for(depth in 2:numLevels(internal)){
       depth_k <- accessLevel(internal, depth)
@@ -303,11 +303,11 @@ plot_landscape <- function(landscape, x_max, y_min, y_max){
   } 
 }
 
-#convert PL to a single vector
+#convert persistence landscape to a single vector
 vectorize_landscapes <- function(PL_list, depth_cap=0){
-  # input: list of PLs and a highest depth of PL to include in vector
+  # input: list of persistence landscapes and a highest depth of persistence landscape to include in vector
   # output: a matrix where each row is the concatenation 
-  # of the y values of a PL at each depth (up to depth_cap). 
+  # of the y values of a persistence landscape at each depth (up to depth_cap). 
   if (depth_cap == 0){ # no depth cap -- set to max depth
     max_depth <- 0
     for (i in 1:length(PL_list)){
@@ -331,7 +331,7 @@ vectorize_landscapes <- function(PL_list, depth_cap=0){
   return(vect_PLs)
 }
 
-# convert persistence diagrams from data structure GUDHI (Dionysus) to tdatools (Ripser)
+# convert persistence diagrams from data structure GUDHI to tdatools
 gudhi2tdatools <- function(gudhi_dgm) {
   # extract first homology from gudhi diagram
   if (length(which(gudhi_dgm[,1]==1)) >1){

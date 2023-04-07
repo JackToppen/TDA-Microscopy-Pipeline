@@ -65,7 +65,7 @@ print(cell_types)
 ```
 
 ## Compute persistence diagrams and automatically save them
-*We use Alpha filtration to compute persistence diagrams*
+*We use Delaunay complex filtration to compute persistence diagrams*
 *Since persistence computations might take long time to compute for a large data set, we automatically saving them in a separate folder, together with max_birth and max_death values*
 
 ```{r}
