@@ -32,8 +32,7 @@ second notebook was configured specifically to the images used within the Hartso
 et al 2023 manuscript.
 
 ### Other
-Example microscopy images can be found on [Figshare](https://figshare.com/projects/TDA_Microscopy_Data/148855).
-
+Example microscopy images can be found on [Figshare](https://figshare.com/projects/TDA_Microscopy_Data/148855). 
 Additionally, *slicer.py* can divide larger microscopy images, as with
 this work, into smaller slices.
 
