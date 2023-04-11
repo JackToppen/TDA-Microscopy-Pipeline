@@ -1,5 +1,8 @@
 numpy
+scipy
 pandas
 scikit-image
 matplotlib
 opencv-python
+tifffile
+
