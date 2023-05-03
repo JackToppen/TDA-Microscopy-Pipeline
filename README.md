@@ -1,5 +1,7 @@
 # Pipeline for quantifying cell patterning with TDA
 
+The pipeline consists of three modules: (1) segmentation; (2) discretization; and (3) topological data anaysis (TDA). The pipeline's input is a collection of microscopy images and it outputs topological descriptors of multicellular patterns (persistence landscapes and average persistence landscapes).
+
 ## Segmentation (Python)
 This section has been adapted from Nikitina et al 2020 to interface with
 the subsequent sections of the pipeline. Once downloaded locally, the
@@ -27,8 +29,8 @@ measured signals from the segmentation section CSVs.
 
 ## TDA (R)
 There are two R notebook files within this section. *general_pipeline.Rmd* should
-be used for the example image set and for most applications of the pipeline. The
-second notebook was configured specifically to the images used within the Hartsock
+be used for the example image set and for most applications of the pipeline. 
+The second notebook was configured specifically to the images used within the Hartsock
 et al 2023 manuscript.
 
 ### Other
