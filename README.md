@@ -1,6 +1,7 @@
 # Pipeline for quantifying cell patterning with TDA
 
-The pipeline consists of three modules: (1) segmentation; (2) discretization; and (3) topological data anaysis (TDA). The pipeline's input is a collection of microscopy images and it main outputs are topological descriptors of multicellular patterns (persistence landscapes and average persistence landscapes).
+The pipeline has been introduced in *Hartsock
+et al 2023* manuscript. It consists of three modules: (1) segmentation; (2) discretization; and (3) topological data anaysis (TDA). The pipeline's input is a collection of microscopy images and it main outputs are topological descriptors of multicellular patterns (persistence landscapes and average persistence landscapes).
 
 ### Microscopy data
 The `example image dataset` and the `complete microscopy dataset` used in *Hartsock
@@ -36,9 +37,7 @@ measured signals from the segmentation section CSVs.
 
 ## TDA (R)
 There are two R notebook files within this section. `general_pipeline.Rmd` should
-be used for the example image set and for the most applications of the pipeline. After loading CSV files of discretized microscopy data, choose which cell types (which are based on signal codes) to use for TDA computations. Note that each block of code of this notebook correspond to different stage of the analysis. By running the notebook on the example image dataset, for each image, the persistence landscape is generated and plotted. Also, for each Dox treatment group, the average persistence landscape is produced and plotted. Additionally, in the final block of code, the permutation test is performed on the persistence landscapes of the two Dox treatment groups, and the p-value is calculated. 
+be used for the example image set and for the most applications of the pipeline. After loading CSV files of discretized microscopy data, choose which cell types (which are based on signal codes) to use for TDA computations. Note that each block of code of this notebook correspond to different stage of the analysis. By running the notebook on the example image dataset, for each image, the persistence landscape is generated and plotted. Also, for each Dox treatment group, the average persistence landscape is produced and plotted in less than 1 min. Additionally, in the final block of code, the permutation test is performed on the persistence landscapes of the two Dox treatment groups, and the p-value is calculated. 
 
-The second notebook `hipsc_pipeline.Rmd` was configured specifically to the images used within the *Hartsock
-et al 2023* manuscript. It requires installing [tda-tools](https://github.com/jjbouza/tda-tools) by Jose Bouza. Besides TDA analysis, this notebook also contains machine learning and statistical hypothesis testing computations.
-
-
+The second notebook `hipsc_pipeline.Rmd` was configured specifically to the complete microscopy dataset used within the *Hartsock
+et al 2023* manuscript. It requires installing [tda-tools](https://github.com/jjbouza/tda-tools) by Jose Bouza. Besides TDA analysis, this notebook also contains machine learning and statistical hypothesis testing computations. Note that you can also run `general_pipeline.Rmd` on the complete microscopy dataset but you need to slice images into smaller patches first with `slicer.py`. 
