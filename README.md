@@ -4,7 +4,7 @@ The pipeline consists of three modules: (1) segmentation; (2) discretization; an
 
 ## Microscopy data
 The `example image dataset` and the `complete microscopy dataset` used in *Hartsock
-et al 2023* manuscript can be found on [Figshare](https://figshare.com/projects/TDA_Microscopy_Data/148855). The example microscopy images consist of two different Dox (doxycycline) treatment groups each consisting of 16 small images. The complete microscopy dataset consists of two image groups based on biological markers pan-GATA6 and HA. Each group contains 4 various Dox treatment subgroups and every one of them consisting of 15 large images.
+et al 2023* manuscript can be found on [Figshare](https://figshare.com/projects/TDA_Microscopy_Data/148855). The example  image dataset consists of two different Dox (doxycycline) treatment groups each consisting of 16 small images. The complete microscopy dataset consists of two image groups based on biological markers pan-GATA6 and HA. Each group contains 4 various Dox treatment subgroups and every one of them consisting of 15 large images.
 
 `slicer.py` can divide larger microscopy images, as was done in *Hartsock
 et al 2023* manuscript, into smaller slices. For our pipeline, we suggest using images of size at most 1,000*1,000 pixels.
