@@ -1,5 +1,5 @@
 
-#Some functions here are from Peter Bubenik's labs that can be found at 
+#Some functions here are from Peter Bubenik's lab that can be found at 
 #https://people.clas.ufl.edu/peterbubenik/intro-to-tda/
 
 #Also, some functions are adapted from 
