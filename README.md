@@ -1,14 +1,11 @@
 # Pipeline for quantifying cell patterning with TDA
 
-The pipeline has been introduced in *Hartsock
-et al 2023* manuscript. It consists of three modules: (1) segmentation; (2) discretization; and (3) topological data anaysis (TDA). The pipeline's input is a collection of microscopy images and it main outputs are topological descriptors of multicellular patterns (persistence landscapes and average persistence landscapes).
+This pipeline was introduced in the *Hartsock et al 2023* manuscript. It consists of three modules: (1) segmentation; (2) discretization; and (3) topological data anaysis (TDA). The pipeline's input is a collection of microscopy images and it main outputs are topological descriptors of multicellular patterns (persistence landscapes and average persistence landscapes).
 
 ### Microscopy data
-The `example dataset` and the `complete dataset` used in *Hartsock
-et al 2023* manuscript can be found on [Figshare](https://figshare.com/projects/TDA_Microscopy_Data/148855). The example   dataset consists of two different Dox (doxycycline) treatment groups each containing 16 small images. The complete dataset consists of two image groups based on biological markers pan-GATA6 and HA. Each group contains 4 various Dox treatment subgroups and every one of them consists of 15 large images.
+The `example dataset` and the `complete dataset` used in the *Hartsock et al 2023* manuscript can be found on [Figshare](https://figshare.com/projects/TDA_Microscopy_Data/148855). The example dataset consists of two different Dox (doxycycline) treatment groups each containing 16 small images. The complete dataset consists of two image groups based on biological markers pan-GATA6 and HA. Each group contains 4 various Dox treatment subgroups and every one of them consists of 15 large images.
 
-`slicer.py` can divide larger microscopy images, as was done in *Hartsock
-et al 2023* manuscript, into smaller patches. For our pipeline, we suggest using images/patches of size at most $1000 \times 1000$ pixels.
+`slicer.py` can divide larger microscopy images, as was done in the *Hartsock et al 2023* manuscript, into smaller patches. For our pipeline, we suggest using images/patches of size at most $1000 \times 1000$ pixels.
 
 ## Segmentation (Python)
 This section has been adapted from *Nikitina et al 2020* to interface with
