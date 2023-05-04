@@ -3,7 +3,7 @@
 This pipeline was introduced in the *Hartsock et al 2023* manuscript. It consists of three modules: (1) segmentation; (2) discretization; and (3) topological data anaysis (TDA). The pipeline's input is a collection of microscopy images and it main outputs are topological descriptors of multicellular patterns (persistence landscapes and average persistence landscapes).
 
 ## Segmentation (Python)
-This section has been adapted from Nikitina et al 2020 to interface with
+This section has been adapted from *Nikitina et al 2020* to interface with
 the subsequent sections of the pipeline. Once downloaded locally, the
 locations of the microscopy images should be updated, and some of the
 configuration parameters may need to be changed.
