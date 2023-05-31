@@ -178,7 +178,7 @@ PLs <- list()
 for (i in 1:length(files)){ 
   PLs[[i]] <- list()
   for (k in 1:npatches){
-    PLs[[i]][[k]] <- landscape0(PDs[[i]][[k]]$pairs[[2]], degree=1, exact=FALSE, dx=dx, min_x=0, max_x=max_x)
+    PLs[[i]][[k]] <- landscape0(PDs[[i]][[k]]$pairs[[2]], degree=1, exact=FALSE, dx=0.3, min_x=0, max_x=max_x)
     plot_landscape(PLs[[i]][[k]], max_x, 0, max_death/2)
   }
 }
