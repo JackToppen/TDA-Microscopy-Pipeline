@@ -21,6 +21,7 @@ library("TDA")
 library("tdatools")
 library("kernlab")
 library("ggplot2")
+library("ggpubr")
 ```
 
 ## Functions
@@ -41,7 +42,7 @@ groups <- c("Gata6","HA")
 nconcentrations <- length(concentrations)
 ngroups <- length(groups)
 #percentile
-percentile <- 65
+percentile <- 75
 #number of images per concentration
 nimages <- 15 
 #number of patches per image
@@ -177,7 +178,7 @@ PLs <- list()
 for (i in 1:length(files)){ 
   PLs[[i]] <- list()
   for (k in 1:npatches){
-    PLs[[i]][[k]] <- landscape0(PDs[[i]][[k]]$pairs[[2]], degree=1, exact=FALSE, dx=dx, min_x=0, max_x=max_x)
+    PLs[[i]][[k]] <- landscape0(PDs[[i]][[k]]$pairs[[2]], degree=1, exact=FALSE, dx=0.3, min_x=0, max_x=max_x)
     plot_landscape(PLs[[i]][[k]], max_x, 0, max_death/2)
   }
 }
@@ -334,7 +335,7 @@ for (j in 1:ngroups){         #j=1 pan-Gata6, j=2 HA
     cell_number_pos[[j]][[c]]<- list()
     cell_number_neg[[j]][[c]]<- list()
     for (i in 1:nimages){             
-      all_cells <- read.csv(file=paste0(data_file_location,data_filenames[[i+(c-1)*nimages+(j-1)*nimages*nconcentrations]]), header=TRUE)
+      all_cells <- read.csv(file=paste0(csv_dir_path,files[[i+(c-1)*nimages+(j-1)*nimages*nconcentrations]]), header=TRUE)
       cell_number_r[[j]][[c]][[i]] <- list()
       cell_number_gr[[j]][[c]][[i]] <- list()
       cell_number_pos[[j]][[c]][[i]] <- list()
@@ -423,14 +424,18 @@ ntest_data <- 2*nsamples/num_folds
 data_labels <- matrix(c(rep(1,(nsamples)),rep(-1,(nsamples))))
 for (i in 1:2){
   if (i == 1){group <- "pan-GATA6"} else {group <- "HA"}
+  
+  #cell count vectors
+  #vectors <- counts[[i]]
+  
   #concatenate PL vectors of all four types
   vectors <- cbind(vec_red[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),], vec_gr[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),], vec_pos[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),], vec_neg[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),]) 
 
-  #normalize PL vectors
+  #normalize vectors
   vectors <- vectors[, colSums(abs(vectors)) != 0]
   vectors <- scale(vectors)
 
-  #create a list of pairwise combinations of PL vectors of different Dox concentration
+  #create a list of pairwise combinations of vectors of different Dox concentration
   list_vectors <-list(rbind(vectors[1:(nsamples),], vectors[(nsamples+1):(2*nsamples),]), rbind(vectors[1:(nsamples),], vectors[(2*nsamples+1):(3*nsamples),]),
 rbind(vectors[1:(nsamples),], vectors[(3*nsamples+1):(4*nsamples),]), 
 rbind(vectors[(nsamples+1):(2*nsamples),], vectors[(2*nsamples+1):(3*nsamples),]), rbind(vectors[(nsamples+1):(2*nsamples),], vectors[(3*nsamples+1):(4*nsamples),]), rbind(vectors[(2*nsamples+1):(3*nsamples),], vectors[(3*nsamples+1):(4*nsamples),]))
@@ -482,10 +487,14 @@ ntest_data <- nall_patches/num_folds
 data_labels <- matrix(c(rep(0,nsamples), rep(5,nsamples), rep(15,nsamples), rep(25,nsamples)))
 for (i in 1:2){
   if (i == 1){group <- "pan-GATA6"} else {group <- "HA"}
+  
+  #cell count vectors
+  #vectors <- counts[[i]]
+  
   #concatenate PL vectors of all four types
   vectors <- cbind(vec_red[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),], vec_gr[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),], vec_pos[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),], vec_neg[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),]) 
 
-  #normalize PL vectors
+  #normalize vectors
   vectors <- vectors[, colSums(abs(vectors)) != 0]
   vectors <- scale(vectors)
   
@@ -527,10 +536,14 @@ ntest_data <- nall_patches/num_folds
 data_labels <- matrix(c(rep(0,nsamples), rep(5,nsamples), rep(15,nsamples), rep(25,nsamples)))
 for (i in 1:2){
   if (i == 1){group <- "pan-GATA6"} else {group <- "HA"}
+  
+  #cell count vectors
+  #vectors <- counts[[i]]
+  
   #concatenate PL vectors of all four types
   vectors <- cbind(vec_red[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),], vec_gr[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),], vec_pos[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),], vec_neg[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),]) 
 
-  #normalize PL vectors
+  #normalize vectors
   vectors <- vectors[, colSums(abs(vectors)) != 0]
   vectors <- scale(vectors)
 
@@ -568,13 +581,17 @@ data_labels <- matrix(c(rep(0,nsamples), rep(5,nsamples), rep(15,nsamples), rep(
 predictions <- list()
 for (i in 1:2){
   if (i == 1){group <- "pan-GATA6"} else {group <- "HA"}
+  
+  #cell count vectors
+  vectors <- counts[[i]]
+  
   #concatenate PL vectors of all four types
-  vectors <- cbind(vec_red[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),],     vec_gr[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),], vec_pos[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),], vec_neg[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),]) 
-
-  #normalize PL vectors
+  #vectors <- cbind(vec_red[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),],     vec_gr[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),], vec_pos[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),], vec_neg[(1+nall_patches*(1-i)):(nall_patches+nall_patches*(1-i)),]) 
+  
+  #normalize vectors
   vectors <- vectors[, colSums(abs(vectors)) != 0]
   vectors <- scale(vectors)
-
+  
   predictions_list <- list()
   for (k in 1:nrepeats){
     rand_perm <- sample(nall_patches)
@@ -600,22 +617,32 @@ for (i in 1:2){
 ## SVR: Dox concentration predictions plotted as a boxplot
 
 ```{r}
+SVR_plot <- list()
 for (i in 1:2){
   if (i == 1){
-    group <- "pan-GATA6"
-    group_predictions <- predictions[[1]]} 
+    group <- "Pan-GATA6"
+    group_predictions <- predictions[[1]]
+    } 
   else {
     group <- "HA"
-    group_predictions <- predictions[[2]]}
+    group_predictions <- predictions[[2]]
+    }
   image_predictions <- vector()
   for (n in 1:(nimages*nconcentrations)){
     image_predictions[n] <- mean(sort(group_predictions[((n-1)*npatches+1):(n*npatches)]))
   }
   concentration <- c(rep("0",nimages),rep("5",nimages),rep("15",nimages),rep("25",nimages))
   value <- c(unlist(image_predictions))
+  
   svr_data <- data.frame(concentration, value)
-  print(ggplot(svr_data, aes(x = concentration, y = value, fill=concentration))+geom_boxplot(outlier.colour = NA, alpha=0.4)+scale_x_discrete(limits=c("0", "5", "15", "25"))+theme(plot.title = element_text(size=18, hjust = 0.5), aspect.ratio=1,text =element_text(size=18))+xlab("actual Dox concentration")+ylab("predicted Dox concentration")+coord_cartesian(ylim=c(0,30))+scale_y_continuous(breaks = c(-5, 0, 5, 10,15,20,25,30))+scale_fill_discrete(breaks=c('0', '5', '15', '25'))+guides(fill=guide_legend(title="Dox concentration"))+geom_jitter(color="black", size=0.9, alpha=0.7, width = 0.2)+ggtitle(group))
+  svr_data <- svr_data %>% group_by(concentration) %>% filter(!is.na(value)) %>% 
+  mutate(Outlier = ifelse(value > quantile(value, 0.75)+1.50*IQR(value),"Outlier","OK")) %>%
+  mutate(Outlier = ifelse(value < quantile(value, 0.25)-1.50*IQR(value),"Outlier",Outlier))
+  
+  SVR_plot[[i]] <- ggplot(subset(svr_data, Outlier == "OK"), aes(x = concentration, y = value, fill=concentration))+geom_boxplot(outlier.colour = NA, alpha=0.4)+scale_x_discrete(limits=c("0", "5", "15", "25"))+xlab("Actual Dox concentration")+ylab("Predicted Dox concentration") +coord_cartesian(ylim=c(0,30))+scale_y_continuous(breaks = c(-5, 0, 5, 10,15,20,25,30)) +scale_fill_discrete(breaks=c('0', '5', '15', '25'))+guides(fill=guide_legend(title="Dox concentration")) +geom_jitter(color="black", size=0.9, alpha=0.7, width = 0.2)+geom_point(inherit.aes = FALSE, data = subset(svr_data, Outlier == "Outlier"), aes(x = concentration, y  = value), size = 0.9, color = "gray65", shape = 19)+theme_bw()+theme(panel.grid.minor = element_blank(),plot.title = element_text(size=18, hjust=0.5), aspect.ratio=1, text = element_text(size=18))+ggtitle(group)
 }
+
+ggarrange(SVR_plot[[1]], SVR_plot[[2]], nrow=1,common.legend = TRUE, legend = "none")
 ```
 
 
