@@ -1,0 +1,135 @@
+# Topological Data Analysis
+
+------------------------------------------------------------------------
+
+#### Dependencies
+
+*Install the following libraries before running the pipeline.*
+
+```{r}
+install.packages(c("TDA", "ggplot2"))
+```
+
+------------------------------------------------------------------------
+
+## Functions and paths
+
+*Pull generalized functions for processing the discretization files and indicate paths.*
+
+```{r}
+# get helper functions
+source("utilities.R")
+
+# specify location of discretized CSVs with cell values and path for TDA outputs
+csv_path <- "~/Research/data"
+out_path <- "outputs"
+
+# image (width) resolution for outputted figures
+resolution <- 1500    # in pixels
+
+# make sure output directory exists
+make_dir(out_path)
+```
+
+## Persistence diagrams (PDs)
+
+*This section will generate persistence diagrams (1D homology) for each discretized CSV provided.*
+
+#### Generating persistence diagrams
+
+```{r}
+# indicate cell types for only including specific cells (put NA for all cells)
+types <- NA   # either a single value or vector
+index <- 16    # default index for cell type is last column
+
+# recursively iterates through specified path to find CSVs and make diagrams
+make_PDs(csv_path, out_path, types, index=index)
+```
+
+#### Plotting persistence diagrams
+
+```{r}
+# diagram point color and potentially specific custom plot max
+color <- "orange"
+# plot_max <- 25
+
+# generate plots for PDs (this will read "maxes.rds" for the plot limits)
+plot_PDs(out_path, color, resolution)
+```
+
+## Persistence landscapes (PLs)
+
+*This section will generate persistence landscapes based on the previous section.*
+
+#### Generating persistence landscapes
+
+```{r}
+# recursively iterates through all diagram files to make PLs
+make_PLs(out_path, n=1000, disc_step=0.1)    # the discretization step can be overridden
+```
+
+#### Plotting persistence landscapes
+
+```{r}
+# specify the number of landscape functions to plot
+n <- 50    # this will plot the first "n" functions
+
+# generate plots for PLs (this will read "maxes.rds" for the plot limits) 
+plot_PLs(out_path, n, resolution)
+```
+
+------------------------------------------------------------------------
+
+## Comparing homology between groups
+
+*Pull generalized functions for comparing groups.*
+
+```{r}
+# get helper functions
+source("utilities.R")
+
+# indicate directory with landscape outputs and relative paths for comparing various groups
+path <- "outputs"
+groups <- c("1k", "2k")
+
+# image (width) resolution for outputted figures
+resolution <- 1500    # in pixels
+```
+
+#### Generating average persistence landscapes
+
+```{r}
+# makes an average PL for each directory in "groups"
+make_avgPL(path, groups)
+```
+
+#### Plotting average persistence landscapes
+
+```{r}
+# specify the number of landscape functions to plot
+n <- 50    # this will plot the first "n" functions
+
+# generate plots for average PLs
+plot_avgPL(path, groups, n, resolution)
+```
+
+#### Plot difference(s) between averages landscapes
+
+```{r}
+# specify the number of landscape functions to plot
+n <- 50    # this will plot the first "n" functions
+
+# generate plots comparing pairs  (all combinations within "groups") from the specified groups
+plot_avgPL_diff(path, groups, n, resolution)
+```
+
+#### Permutation test between groups
+
+```{r}
+# specify the max number of landscapes to use and the number of permutations to run
+depth <- 30
+reps <- 1000
+
+# run test comparing pairs (all combinations within "groups") from the specified groups
+perm_test(path, groups, depth, reps)
+```

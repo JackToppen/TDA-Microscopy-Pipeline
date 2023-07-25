@@ -1,388 +1,409 @@
-
-#Some functions here are from Peter Bubenik's lab that can be found at 
-#https://people.clas.ufl.edu/peterbubenik/intro-to-tda/
-
-#Also, some functions are adapted from 
-#https://github.com/althomas/tda-for-worm-behavior
+library(ggplot2)
+library(TDA)
 
 
-get_csvs <- function(path) {
-    # get list of discretized CSVs recursively
-    files <- list.files(path, pattern="\\.csv$", include.dirs=TRUE, recursive=TRUE)
-}
-
-concat_path <- function(path, filename) {
-  # make sure path has file separator at the end
-  n <- nchar(path)
-  if (substr(path, n, n) != .Platform$file.sep) {
-    path <- paste0(path, .Platform$file.sep)
-  }
-
-  # return correct joined path to file
-  return(paste0(path, filename))
-}
-
-############tda functions for general_pipeline.Rmd#######################################
-
-# remove dimension zero points from a persistence diagram
-remove_dimzero_from_diagrams <- function(PD){
-  zeroes <- which(PD[, 1] == 0)
-  new_PD <- PD[-zeroes,] 
-  return(new_PD)
-}
-
-#compute and save a list of persistence diagrams
-diagrams_list <- function(data_files, cell_types, csv_files_path, save_filename, save_file_location){
-  PDs <- list()
-  max_birth <- list() 
-  max_death <- list() 
-  for (i in 1:length(data_files)){
-    print(sprintf("Processing file %s", data_files[i]))
-    path <- concat_path(csv_files_path, data_files[i])
-    cells <- read.csv(path)
-    cells <- cells[which(is.element(cells[,8], cell_types)),]
-    #compute persistence homology using Delaunay complex filtration (also known as Alpha complex filtration)
-    PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
-    PDs[[i]] <- PH[["diagram"]]
-    PDs[[i]] <- remove_dimzero_from_diagrams(PDs[[i]])
-    PDs[[i]][,2:3] <- sqrt(PDs[[i]][,2:3])
-    #max birth of 1-degree persistence diagrams 
-    max_birth[[i]] <- max(PDs[[i]][,2])
-    #max death of 1-degree persistence diagrams 
-    max_death[[i]] <- max(PDs[[i]][,3])
-  }
+make_PDs <- function(csv_path, out_path, types, index=NA) {
+  # hold max birth/death and features for plotting and landscapes
+  max_birth <- 0
+  max_death <- 0
+  max_features <- 0
   
-  max_birth <- max(unlist(max_birth))
-  max_death <- max(unlist(max_death))
+  # iterate through list of CSVs with locations to generate diagrams
+  files <- get_files(csv_path, "\\.csv$")
+  for (file in files) {
+    # read the CSV to a data frame
+    csv_file <- concat_paths(csv_path, file)
+    df <- read.csv(csv_file)
+    
+    # if no index provided, use last column
+    if (is.na(index)) index <- ncol(df)
   
-  #save the list of persistence diagrams, the max birth and max death values
-  save(PDs, max_birth, max_death, file=paste0(save_file_location,save_filename))
-  
-  return(PDs)
-}
-
-#plot persistence diagrams from a list
-plot_diagrams_from_list <- function(PD_list, number_of_files, birth, death){
-  par(pty="s")
-  max_radius <- max(birth, death)
-  for (i in 1:number_of_files){
-    plot(PD_list[[i]][,2:3], asp=1, xlim=c(0, max_radius) , ylim=c(0, max_radius), xlab='', ylab='', col='orange', bty="o", pch=20, cex=1)
-    abline(0,1)
-  }
-}
-
-#plot representative cycles that persist (live) over a certain threshold
-plot_representative_cycles <- function(data_files, cell_types, csv_files_path, threshold){
-  par(pty="s")
-  for (i in 1:length(data_files)){
-    print(sprintf("Processing file %s", data_files[i]))
-    path <- concat_path(csv_files_path, data_files[i])
-    cells <- read.csv(path)
-    cells <- cells[which(is.element(cells[,8], cell_types)),]
-    #compute persistence homology using Delaunay complex filtration (also known as Alpha complex filtration)
-    filtration <- alphaComplexFiltration(cells[,1:2], printProgress = TRUE)
-    PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
-    PD <- PH[["diagram"]]
-    #plot cycles that persist over specific persistence_param
-    ones <- which(PD[,1] == 1)
-    if (length(ones) > 1 ){
-      plot(filtration[["coordinates"]], pch = 19, cex=0.1, ylab="", xlab="", axes = FALSE)
-      for (m in ones[1]:(length(ones)+ones[1]-1)){
-        cycles <- PH[["cycleLocation"]][m]
-        if ((sqrt(PD[m,3]) - sqrt(PD[m,2])  > threshold) ){
-          for (s in 1:length(cycles)){
-            for (l in 1:dim(cycles[[s]])[1]){
-              lines(cycles[[s]][l,,], col="blue", lwd=1)
-            }
-          } 
-        } 
+    # if there are cell types specified, only include those rows
+    if (!any(is.na(types))) {
+      if (length(types) > 1) {
+        df <- df[df[,index] %in% types,]    # if a vector is provided
+      } else {
+        df <- df[df[,index] == types,]    # if a single value
       }
     }
-  }
-}
-
-#compute and save a list of persistence landscapes
-landscapes_list <- function(PD_list, number_of_files, birth, death, discr_step, save_filename, save_file_location){
-  max_x <- (death+birth)/2 + 5
-  radius_values <- seq(0, max_x, discr_step)
-  PLs <- list()
-  for (i in 1:number_of_files){ 
-    PLs[[i]] <- t(landscape(PD_list[[i]],dimension=1,KK=1:1000,radius_values))
-  }
-  
-  #save the list of persistence diagrams, the max birth and max death values
-  save(PDs, radius_values, file=paste0(save_file_location,save_filename))
-  
-  return(PLs)
-}
-
-#plot a list of persistence landscapes
-plot_landscapes_from_list <- function(PL_list,number_of_files, birth, death, discr_step){
-  par(pty="s")
-  mycolors <- c("midnightblue","slateblue", "royalblue2", "deepskyblue4", "deepskyblue3",
-                "turquoise4", "chartreuse4","olivedrab4", "olivedrab3", "yellowgreen", 
-                "yellow3","gold3", "gold2","gold1", "gold" )
-  
-  max_x <- (death+birth)/2 + 5
-  max_height <- death/2 
-  radius_values <- seq(0, max_x, discr_step)
-  for (i in 1:number_of_files){ 
-    plot(radius_values, PL_list[[i]][1,], type="l", ylab="", xlab="", xlim=c(0, max_x) , ylim=c(0, max_height), ann=FALSE, bty="o",col=mycolors[1])
-    for(k in 2:dim(PL_list[[i]])[1]){
-      lines(radius_values,PL_list[[i]][k,],type="l",col=mycolors[k %% 15])
+    
+    # compute persistence homology using Delaunay complex filtration (aka Alpha complex filtration)
+    out <- alphaComplexDiag(df[,1:2], maxdimension=1, library=c("GUDHI", "Dionysus"), location=TRUE)
+    PD <- out[["diagram"]]
+    
+    # remove dimension zero points
+    PD <- PD[PD[,1] != 0,,drop=F]
+    
+    # only continue if features exist
+    if (nrow(PD) > 0) {
+      PD[,2:3] <- sqrt(PD[,2:3])
+      
+      # hold max birth/death all 1-degree persistence diagrams
+      if (nrow(PD) > 1) {
+        birth <- max(PD[,2])
+        death <- max(PD[,3])
+      } else {
+        birth <- PD[1,2]
+        death <- PD[1,3]
+      }
+      if (birth > max_birth) max_birth <- birth
+      if (death > max_death) max_death <- death
+      
+      # additionally get max number of features
+      features <- nrow(PD)
+      if (features > max_features) max_features <- features
+      
+      # get path to diagram CSV output
+      no_ext <- sub("\\.csv$", "", file)
+      filename <- paste0(no_ext, .Platform$file.sep, basename(no_ext), "_PD.csv")
+      PD_path <- concat_paths(out_path, filename)
+      
+      # make directory to output and write the CSV
+      make_dir(dirname(PD_path))
+      write.csv(PD, PD_path, row.names=FALSE)
     }
   }
+   
+  # save max birth/death for plotting and landscape generating
+  rds_file <- concat_paths(out_path, "maxes.rds")
+  saveRDS(c(max_birth, max_death, max_features), file=rds_file)
 }
 
-# convert a vector to a persistence landscape
-landscape_from_vector <- function(PL_vector, radius_values){
-  m <- length(radius_values)
-  K <- length(PL_vector)/m
-  PL <- Matrix(0, nrow = K, ncol=m, sparse = TRUE)
-  for (i in 1:K){
-    PL[i,1:m] <- PL_vector[(1+(i-1)*m):(i*m)]
-  }
-  return(PL)
-}
 
-# Matrix of persistence landscape row vectors from list of persistence landscapes
-landscape_matrix_from_list <- function(PL_list){
-  n <- length(PL_list)
-  m <- ncol(PL_list[[1]])
-  max_depth <- integer(n)
-  for (i in 1:n)
-    max_depth[i] <- nrow(PL_list[[i]])
-  K <- max(max_depth)
-  PL_matrix <- Matrix(0, nrow = n, ncol = m*K, sparse = TRUE)
-  for (i in 1:n)
-    for (j in 1:max_depth[i])
-      PL_matrix[i,(1+(j-1)*m):(j*m)] <- PL_list[[i]][j,]
-  return(PL_matrix)
-}
-
-#compute and save the average persistence landscape
-average_persistence_landscape <- function(PL_list, birth, death, save_filename, save_file_location){
-  PL_matrix <- landscape_matrix_from_list(PL_list)
-  average_PL_vector <- colMeans(PL_matrix, sparseResult = TRUE)
-  average_PL <- landscape_from_vector(average_PL_vector, radius_values)
+plot_PDs <- function(out_path, color, resolution, plot_max=NA) {
+  # read the max/birth RDS file
+  rds_file <- concat_paths(out_path, "maxes.rds")
+  maxes <- readRDS(rds_file)
   
-  save(average_PL, birth, death, file=paste0(save_file_location,save_filename))
-  
-  return(average_PL)
-}
-
-#plot average persistence landscape
-plot_average_persistence_landscape <- function(average_PL, birth, death, discr_step){
-  max_x <- (death+birth)/2 + 5
-  radius_values <- seq(0, max_x, discr_step)
-  
-  
-  par(pty="s")
-  mycolors <- c("midnightblue","slateblue", "royalblue2", "deepskyblue4", "deepskyblue3",
-                "turquoise4", "chartreuse4","olivedrab4", "olivedrab3", "yellowgreen", 
-                "yellow3","gold3", "gold2","gold1", "gold" )
-  
-  max_height <- death/2 
-  plot(radius_values, average_PL[1,], type="l", ylab="", xlab="", xlim=c(0, max_x) , ylim=c(0, max_height), ann=FALSE, bty="o",col=mycolors[1])
-  for(k in 2:dim(average_PL)[1]){
-    lines(radius_values,average_PL[k,],type="l",col=mycolors[k %% 15])
-  }
-}
-
-#compute the difference between two average persistence landscapes 
-plot_difference_average_PL <- function(average_PL1, average_PL2, birth1, death1, birth2, death2, discr_step){
-  if (ncol(average_PL1) < ncol(average_PL2)){
-    average_PL1 <- cbind(average_PL1, matrix(0, nrow(average_PL1), ncol(average_PL2)-ncol(average_PL1)))
-    difference_matrix <- average_PL1 - average_PL2
-    max_x <- (max_birth2+max_death2)/2 + 5
-    max_height <- death2/2 
-  } else{
-    average_PL2 <- cbind(average_PL2, matrix(0, nrow(average_PL2), ncol(average_PL2)-ncol(average_PL2)))
-    difference_matrix <- average_PL1 - average_PL2
-    max_x <- (max_birth1+max_death1)/2 + 5
-    max_height <- death1/2 
-  }
-  
-  radius_values <- seq(0, max_x, discr_step)
-  
-  par(pty="s")
-  mycolors <- c("midnightblue","slateblue", "royalblue2", "deepskyblue4", "deepskyblue3",
-                "turquoise4", "chartreuse4","olivedrab4", "olivedrab3", "yellowgreen", 
-                "yellow3","gold3", "gold2","gold1", "gold" )
-  
-  
-  plot(radius_values, difference_matrix[2,], type="l", ylab="", xlab="", xlim=c(0, max_x), ylim=c(-max_height, max_height), ann=FALSE, bty="o",col=mycolors[1])
-  for(k in 2:dim(difference_matrix)[1]){
-    lines(radius_values, difference_matrix[k,],type="l",col=mycolors[k %% 15])
-  }
-}
-
-#permutation test on two groups of PLs saved as lists
-permutation_test_for_PLs <- function(PL1, PL2, nrepeats = 10000){
-  PL1_matrix <- landscape_matrix_from_list(PL1)
-  PL2_matrix <- landscape_matrix_from_list(PL2)
-  # append zeros if necessary so that the matrices have the same number of columns
-  num_columns <- max(ncol(PL1_matrix),ncol(PL2_matrix))
-  PL1_matrix <- cbind(PL1_matrix, Matrix(0,nrow=nrow(PL1_matrix),ncol=num_columns-ncol(PL1_matrix)))
-  PL2_matrix <- cbind(PL2_matrix, Matrix(0,nrow=nrow(PL2_matrix),ncol=num_columns-ncol(PL2_matrix)))
-  
-  M <- rbind(PL1_matrix, PL2_matrix)
-  n <- nrow(M) # number of total data points
-  k <- nrow(PL1_matrix) # number of data points in first group
-  observation <- euclidean_distance(colMeans(PL1_matrix),colMeans(PL2_matrix))
-  ngreater_distances <- 0
-  for (i in 1:nrepeats){
-    permutation <- sample(1:n)
-    distance <- euclidean_distance(colMeans(M[permutation[1:k],]),colMeans(M[permutation[(k+1):n],]))
-    if (distance >= observation)
-      ngreater_distances <- ngreater_distances + 1
-  }
-  return(print(sprintf("p-value %f:", ngreater_distances/nrepeats)))
-}
-
-############tda functions for hipsc_pipeline.Rmd ('tda-tools' package needed)###########
-
-#plot persistence diagram
-plot_diagram <- function(pairs, dgm_max){
-  par(pty="s")
-  finite_points <- matrix(pairs[pairs[,2] != Inf], ncol=2)
-  #line below is needed if we compute homology in degree 0 
-  #because we might have path connected components that die at infinity
-  infinite_points <- matrix(pairs[pairs[,2] == Inf], ncol=2) 
-  
-  if (missing(dgm_max)){
-    dgm_max <- max(pairs[pairs[,] != Inf])
-    dgm_max <- dgm_max + 0.05*(dgm_max)
-  }
-  
-  if (nrow(finite_points) > 0){
-    plot(finite_points, col='orange', bty="o", asp=1, xlab='', ylab='', xlim=c(0,dgm_max), ylim=c(0,dgm_max), pch=20, cex=1)
-  } else {
-    plot(c(dgm_min,dgm_min), col='white', bty="o", asp=1, xlab='', ylab='', xlim=c(0,dgm_max), ylim=c(0,dgm_max), pch=20, cex=1)
-  }
-  points(infinite_points[,1],rep(dgm_max,nrow(infinite_points)), col='red', pch=20, cex=1)
-  abline(0,1)
-}
-
-#compute persistence landscape from a persistence diagram
-# returns zero persistence landscape if persistence diagram is empty (instead of giving an error)
-landscape0 <- function(data, degree, exact=FALSE, dx, min_x, max_x){
-  if (length(data)==0) { # empty persistence diagram
-    tdatools::landscape(matrix(0, nrow=1,ncol=2), degree=degree, exact=exact, dx=dx, min_x=min_x, max_x=max_x)
-  } else {
-    tdatools::landscape(data, degree=degree, exact=exact, dx=dx, min_x=min_x, max_x=max_x)
-  }
-}
-
-#plot persistence landscape using color scheme
-plot_landscape <- function(landscape, x_max, y_min, y_max){
-  par(pty="s")
-  internal <- landscape$getInternal()
-  infinity_sub <- -1
-  line_width <- 1
-  mycolors <- c("midnightblue","slateblue", "royalblue2", "deepskyblue4", "deepskyblue3",
-                "turquoise4", "chartreuse4","olivedrab4", "olivedrab3", "yellowgreen", 
-                "yellow3","gold3", "gold2","gold1", "gold" )
-  
-  depth_1 <- accessLevel(internal,1)
-  
-  if ((missing(x_max) | missing(y_max))){ 
-    plot(depth_1[,1], depth_1[,2], type='l', xlab='', ylab='', ann=FALSE, bty="o", col=mycolors[1], lwd=line_width)
-  } 
-  #plot persistence landscape with specific limits of x-axis and y-axis
-  else { 
-    plot(depth_1[,1],depth_1[,2], xlim=c(0, x_max) , ylim=c(y_min, y_max), type='l', ann=FALSE, bty="o",col=mycolors[1], lwd=line_width)
-  }
-  
-  #plot persistence landscape at other depths
-  if (numLevels(internal) >1 ){
-    for(depth in 2:numLevels(internal)){
-      depth_k <- accessLevel(internal, depth)
-      lines(depth_k[,1], depth_k[,2], col=mycolors[depth %% 15], lwd=line_width)
-    }
-  } 
-}
-
-#convert persistence landscape to a single vector
-vectorize_landscapes <- function(PL_list, depth_cap=0){
-  # input: list of persistence landscapes and a highest depth of persistence landscape to include in vector
-  # output: a matrix where each row is the concatenation 
-  # of the y values of a persistence landscape at each depth (up to depth_cap). 
-  if (depth_cap == 0){ # no depth cap -- set to max depth
-    max_depth <- 0
-    for (i in 1:length(PL_list)){
-      max_depth <- max(max_depth, dim(PL_list[[i]]$getInternal())[1])
-    }
-    depth_cap <- max_depth
-  }
-  
-  vect_length <- depth_cap*dim(PL_list[[1]]$getInternal())[2]
-  vect_PLs <- matrix(0, nrow=length(PL_list), ncol=vect_length)
-  for (i in 1:length(PL_list)){
-    if (dim(PL_list[[i]]$getInternal())[1] < depth_cap) {
-      # need the transpose because as.vector takes columns of a matrix, not rows
-      temp_vec <- as.vector(t(PL_list[[i]]$getInternal()[,,2]))
-      vect_PLs[i,1:length(temp_vec)] <- temp_vec
+  # iterate through all PD files
+  files <- get_files(out_path, "\\PD.csv$")
+  for (file in files) {
+    # read the CSV and get diagram
+    PD_file <- concat_paths(out_path, file)
+    PD <- read.csv(PD_file)
+    
+    # convert filename from CSV to PNG and get path to new PNG
+    local_path <- sub("\\.csv$", ".png", file)
+    image_path <- concat_paths(out_path, local_path)
+    
+    # plot the persistence diagram (include extra space beyond max death)
+    if (!is.na(plot_max)) {
+      plot_lim <- plot_max
     } else {
-      temp_vec <- as.vector(t(PL_list[[i]]$getInternal()[1:depth_cap,,2]))
-      vect_PLs[i,] <- temp_vec
+      plot_lim <- 1.1 * maxes[2]
+    }
+    p <- ggplot(PD, aes(x=Birth, y=Death)) +
+      geom_point(shape=16, color=color) +
+      scale_x_continuous(expand=c(0, 0), limits=c(0, plot_lim)) + 
+      scale_y_continuous(expand=c(0, 0), limits=c(0, plot_lim)) + 
+      theme_classic() + xlab("birth") + ylab("death")
+    
+    # add a line with slope=1
+    p + geom_abline(intercept=0, slope=1)
+    
+    # convert width to inches and write image file
+    width <- resolution / 300    # 300 pixels per inch default
+    ggsave(image_path, width=width, height=width)
+  }
+}
+
+
+make_PLs <- function(out_path, percent=NA, n=NA, disc_step=NA) {
+  # read the max/birth RDS file
+  rds_file <- concat_paths(out_path, "maxes.rds")
+  maxes <- readRDS(rds_file)
+  
+  # if no user-specified discretization step, base the step on the max death
+  if (is.na(disc_step)) disc_step = maxes[2] / 200
+  
+  # PL limit for plotting/comparing
+  x_max <- (maxes[1]+maxes[2])/2
+  values <- seq(0, x_max, disc_step)
+  
+  # determine the number of landscape functions to calculate
+  if (is.na(n)) {
+    if (is.na(percent)) {
+      n <- 1000    # default value
+    } else {
+      # otherwise compute percentage of max possible number of landscapes
+      n <- as.integer(percent * maxes[3])    
     }
   }
-  return(vect_PLs)
-}
-
-# convert persistence diagrams from data structure GUDHI to tdatools
-gudhi2tdatools <- function(gudhi_dgm) {
-  # extract first homology from gudhi diagram
-  if (length(which(gudhi_dgm[,1]==1)) >1){
-    h1 <- gudhi_dgm[which(gudhi_dgm[,1]==1),][,2:3] # size is dim(h1) x 2
-  }
-  if (length(which(gudhi_dgm[,1]==1))==1){
-    h <- gudhi_dgm[which(gudhi_dgm[,1]==1),2:3] # size is dim(h1) x 2
-    h1 <- rbind(rep(0,2),h)
-  }
-  if (length(which(gudhi_dgm[,1]==1))==0){
-    h1 <- rbind(rep(0,2),rep(0,2))
-  }
-  # extract zero homology from gudhi diagram
-  if (length(which(gudhi_dgm[,1]==0)) >1){
-    h0 <- gudhi_dgm[which(gudhi_dgm[,1]==0),][,2:3] # size is dim(h1) x 2
-  }
-  if (length(which(gudhi_dgm[,1]==0))==1){
-    h <- gudhi_dgm[which(gudhi_dgm[,1]==0),2:3] # size is dim(h1) x 2
-    h0 <- rbind(rep(0,2),h)
-  }
-  if (length(which(gudhi_dgm[,1]==0))==0){
-    h0 <- rbind(rep(0,2),rep(0,2))
-  }
-  # create tdatools diagram; load with zero and first homology
-  tdatools_dgm <- diagram(0,'point-cloud', dim_max = 1)
-  tdatools_dgm$pairs[[2]] <- h1
-  tdatools_dgm$pairs[[1]] <- h0
   
-  return(tdatools_dgm)
-}
-
-#Euclidean distance between two vectors 
-euclidean_distance <- function(u, v) sqrt(sum((u - v) ^ 2))
-
-#permutation test on two groups of data that are saved as matrices
-permutation_test <- function(group1 , group2, num.repeats = 10000){
-  # append zeros if necessary so that the matrices have the same number of columns
-  num.columns <- max(ncol(group1),ncol(group2))
-  group1 <- cbind(group1, Matrix(0,nrow=nrow(group1),ncol=num.columns-ncol(group1)))
-  group2 <- cbind(group2, Matrix(0,nrow=nrow(group2),ncol=num.columns-ncol(group2)))
-  t.obs <- euclidean.distance(colMeans(group1),colMeans(group2))
-  k <- dim(group1)[1]
-  M <- rbind(group1,group2)
-  n <- dim(M)[1]
-  count <- 0
-  for (i in 1:num.repeats){
-    permutation <- sample(1:n)
-    t <- euclidean.distance(colMeans(M[permutation[1:k],]),colMeans(M[permutation[(k+1):n],]))
-    if (t >= t.obs)
-      count <- count + 1
+  # iterate through all PD files
+  files <- get_files(out_path, "\\PD.csv$")
+  for (file in files) {
+    # read the CSV and get diagram
+    PD_file <- concat_paths(out_path, file)
+    PD <- read.csv(PD_file)
+    
+    # generate the landscape (each column is a landscape function)
+    PL <- as.data.frame(landscape(PD, dimension=1, KK=1:n, values))
+    colnames(PL) <- paste0("func_", 1:n)    # name columns
+    PL <- cbind(values, PL)    # add x-axis values
+    
+    # get path to landscape CSV output
+    local_path <- sub("\\_PD.csv$", "_PL.csv", file)
+    PL_file <- concat_paths(out_path, local_path)
+    
+    # write the CSV
+    write.csv(PL, PL_file, row.names=FALSE)
   }
-  return(count/num.repeats)
+}
+    
+
+plot_PLs <- function(out_path, n, resolution) {
+  # read the max/birth RDS file
+  rds_file <- concat_paths(out_path, "maxes.rds")
+  maxes <- readRDS(rds_file)
+  
+  # get plot limits
+  x_max <- (maxes[1]+maxes[2])/2
+  y_max <- maxes[2]/2
+  
+  # iterate through all PL files
+  files <- get_files(out_path, "\\PL.csv$")
+  for (file in files) {
+    # read the CSV and get landscape
+    PL_file <- concat_paths(out_path, file)
+    PL <- read.csv(PL_file)
+    
+    # convert filename from CSV to PNG and get path to new PNG
+    local_path <- sub("\\.csv$", ".png", file)
+    image_path <- concat_paths(out_path, local_path)
+    
+    # generate and save persistence landscape plot
+    plot_PL(PL, image_path, c(0, x_max), c(0, y_max), n, resolution)
+  }
 }
 
+
+make_avgPL <- function(path, groups) {
+  # generate average landscape for each group
+  for (dir in groups) {
+    # get all PL files in the specified directory
+    dir_path <- concat_paths(path, dir)
+    files <- get_files(dir_path, "\\PL.csv$")
+    n <- length(files)
+    
+    # read the first PL to start average
+    PL_file <- concat_paths(dir_path, files[[1]])
+    total <- data.matrix(read.csv(PL_file))
+    
+    # iterate through all files
+    for (i in 2:n) {
+      # read the CSV and add landscape to total
+      PL_file <- concat_paths(dir_path, files[[i]])
+      total <- total + data.matrix(read.csv(PL_file))
+    }
+    
+    # get path to landscape CSV output
+    local_path <- paste0(basename(dir), "_avgPL.csv")
+    avgPL_file <- concat_paths(dir_path, local_path)
+
+    # get average PL and write the CSV
+    avgPL <- total/n
+    write.csv(avgPL, avgPL_file, row.names=FALSE)
+  }
+}
+
+
+plot_avgPL <- function(path, groups, n, resolution) {
+  # read the max/birth RDS file
+  rds_file <- concat_paths(path, "maxes.rds")
+  maxes <- readRDS(rds_file)
+  
+  # get plot limits
+  x_max <- (maxes[1]+maxes[2])/2
+  y_max <- maxes[2]/2
+  
+  # plot average landscape for each group
+  for (dir in groups) {
+    # get path to average landscape file
+    dir_path <- concat_paths(path, dir)
+    local_path <- paste0(basename(dir), "_avgPL.csv")
+    
+    # read the CSV and get landscape
+    avgPL_file <- concat_paths(dir_path, local_path)
+    avgPL <- read.csv(avgPL_file)
+    
+    # convert filename and save persistence landscape plot
+    image_path <- sub("\\.csv$", ".png", avgPL_file)
+    plot_PL(avgPL, image_path, c(0, x_max), c(0, y_max), n, resolution)
+  }
+}
+
+
+plot_avgPL_diff <- function(path, groups, n, resolution) {
+  # read the max/birth RDS file
+  rds_file <- concat_paths(path, "maxes.rds")
+  maxes <- readRDS(rds_file)
+  
+  # get plot limits
+  x_max <- (maxes[1]+maxes[2])/2
+  y_max <- maxes[2]/2
+  
+  # get all possible pairs and iterate through them
+  pairs <- combn(groups, 2)
+  for (i in 1:ncol(pairs)) {
+    dir_1 <- pairs[1,i]
+    dir_2 <- pairs[2,i]
+    
+    # get path to first average landscape file
+    dir_path_1 <- concat_paths(path, dir_1)
+    local_path_1 <- paste0(basename(dir_1), "_avgPL.csv")
+    avgPL_file_1 <- concat_paths(dir_path_1, local_path_1)
+    
+    # get path to second average landscape file
+    dir_path_2 <- concat_paths(path, dir_2)
+    local_path_2 <- paste0(basename(dir_2), "_avgPL.csv")
+    avgPL_file_2 <- concat_paths(dir_path_2, local_path_2)
+    
+    # read average persistence landscapes
+    avgPL_1 <- data.matrix(read.csv(avgPL_file_1))
+    avgPL_2 <- data.matrix(read.csv(avgPL_file_2))
+    diffPL <- avgPL_1 - avgPL_2
+    diffPL[,1] <- avgPL_1[,1]
+    
+    # change the file separator to dash if path contains it
+    rename_1 <- sub(.Platform$file.sep, "-", dir_1)
+    rename_2 <- sub(.Platform$file.sep, "-", dir_2)
+    
+    # plot difference of landscapes
+    image_path <- concat_paths(path, paste0(rename_1, "_", rename_2, "_diff.png"))
+    plot_PL(diffPL, image_path, c(0, x_max), c(-y_max, y_max), n, resolution)
+  }
+}
+
+
+perm_test <- function(path, groups, depth=30, reps=10000, all=FALSE) {
+  # get all possible pairs and iterate through them
+  pairs <- combn(groups, 2)
+  for (i in 1:ncol(pairs)) {
+    dir_1 <- pairs[1,i]
+    dir_2 <- pairs[2,i]
+    
+    # get a matrix with rows as each PL within the first group
+    dir_path_1 <- concat_paths(path, dir_1)
+    PL_mat_1 <- PLs_to_mat(dir_path_1, depth, all)
+    
+    # get a matrix with rows as each PL within the second group
+    dir_path_2 <- concat_paths(path, dir_2)
+    PL_mat_2 <- PLs_to_mat(dir_path_2, depth, all)
+    
+    # compute average PL vector from each matrix
+    avgPL_1 <- colMeans(PL_mat_1)
+    avgPL_2 <- colMeans(PL_mat_2)
+    
+    # hold original distance of mean vectors and counter for test
+    dist <- distance(avgPL_1, avgPL_2)
+    count <- 0
+    
+    # merge the matrices and count number of rows in each
+    merged <- rbind(PL_mat_1, PL_mat_2)
+    n_1 <- nrow(PL_mat_1)
+    n_2 <- nrow(PL_mat_2)
+    total_rows <- n_1 + n_2
+    
+    # run k permutations
+    for (i in 1:reps) {
+      # create permutation of row indices
+      permutation <- sample(1:total_rows)
+      
+      # get average PL vector for each new group
+      avgPL_1 <- colMeans(merged[permutation[1:n_1],])
+      avgPL_2 <- colMeans(merged[permutation[(n_1+1):total_rows],])
+      
+      # increase count if distance of this permutation is greater than original
+      perm_dist <- distance(avgPL_1, avgPL_2)
+      if (perm_dist > dist) {
+        count <- count + 1
+      }
+    }
+    
+    # output p-value of comparison
+    print(paste0("p-value for ", dir_1, " vs. ", dir_2, " -> ", count / reps))
+  }
+}
+
+
+plot_PL <- function(PL, image_file, x_lim, y_lim, n, resolution) {
+  # define color list for landscape functions
+  colors <- c("#648FFF", "#6E77F8", "#785EF0", "#AA42B8", "#DC267F", "#ED4440", "#FE6100", "#FF8900", "#FFB000")
+  
+  # create plot
+  p <- ggplot() +
+    scale_x_continuous(expand=c(0, 0), limits=1.1*x_lim) + 
+    scale_y_continuous(expand=c(0, 0), limits=1.1*y_lim) + 
+    theme_classic() + xlab("(birth+death)/2") + ylab("(death-birth)/2")
+  
+  # plot each of the landscape functions
+  for (i in 2:(n+1)) {
+    temp <- data.frame(X=PL[,1], Y=PL[,i])
+    p <- p + geom_line(data=temp, aes(X,Y), color=colors[i %% 8 + 1], linewidth=0.3)
+  }
+  
+  # convert width to inches and write image file
+  width <- resolution / 300    # 300 pixels per inch default
+  ggsave(image_file, width=width, height=width*(y_lim[2]/x_lim[2]))
+}
+
+
+PLs_to_mat <- function(path, depth, all) {
+  # create holder for vector representations of PLs
+  PLs <- list()
+  
+  # get files
+  files <- get_files(path, "\\PL.csv$")
+  n <- length(files)
+  
+  # iterate through all PL files
+  for (i in 1:n) {
+    # read the CSV and add landscape to total
+    PL_file <- concat_paths(path, files[[i]])
+    PL <- data.matrix(read.csv(PL_file))[,-1]    # remove first column
+    
+    # determine how many functions to use
+    m <- ncol(PL)
+    if (all | m < depth) {
+      PLs[[i]] <- as.vector(PL)    # use all discretized landscape functions
+    } else {
+        PLs[[i]] <- as.vector(PL[,1:depth])    # only use top 1 to depth functions
+    }
+  }
+  
+  # return a matrix with each row as a vector for each PL
+  return(do.call(rbind, PLs))
+}
+
+
+get_files <- function(path, pattern) {
+  # get list of discretized CSVs recursively
+  files <- list.files(path, pattern=pattern, include.dirs=TRUE, recursive=TRUE)
+}
+
+
+make_dir <- function(path) {
+  # check if directory exists and if not, make it
+  if (!dir.exists(path)) {
+    dir.create(path, recursive=TRUE)
+  }
+}
+
+
+concat_paths <- function(path_1, path_2) {
+  # make sure first path has file separator at the end
+  n <- nchar(path_1)
+  if (substr(path_1, n, n) != .Platform$file.sep) {
+    path_1 <- paste0(path_1, .Platform$file.sep)
+  }
+  
+  # return correct joined paths
+  return(paste0(path_1, path_2))
+}
+
+
+distance <- function(u, v) {
+  # return euclidean distance
+  sqrt(sum((u - v) ^ 2))
+}
