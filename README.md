@@ -20,6 +20,13 @@ Using Anaconda, the segmentation section can be run using the command below.
 jupyter notebook
 ```
 
+Note: if using alternative segmentation methods, the discretization section requires
+CSVs formatted from left to right as follows.
+
+```
+| X coord | Y coord | nuclear marker | marker #1 | marker #2 | ... |
+```
+
 ## Discretization (R)
 It is recommended that *pipeline.Rmd* is run in RStudio. The *cell_colors.csv*
 file is used to specify how cells are labeled in the discretized images. Binary
