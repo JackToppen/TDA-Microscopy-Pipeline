@@ -1,8 +1,5 @@
 
-#Some functions here are from Peter Bubenik's lab that can be found at 
-#https://people.clas.ufl.edu/peterbubenik/intro-to-tda/
-
-#Also, some functions are adapted from 
+#Some functions are adapted from 
 #https://github.com/althomas/tda-for-worm-behavior
 
 
@@ -21,8 +18,6 @@ concat_path <- function(path, filename) {
   # return correct joined path to file
   return(paste0(path, filename))
 }
-
-############tda functions for hipsc_pipeline.Rmd ('tda-tools' package needed)###########
 
 #plot persistence diagram
 plot_diagram <- function(pairs, dgm_max){
@@ -154,14 +149,14 @@ permutation_test <- function(group1 , group2, num.repeats = 10000){
   num.columns <- max(ncol(group1),ncol(group2))
   group1 <- cbind(group1, Matrix(0,nrow=nrow(group1),ncol=num.columns-ncol(group1)))
   group2 <- cbind(group2, Matrix(0,nrow=nrow(group2),ncol=num.columns-ncol(group2)))
-  t.obs <- euclidean.distance(colMeans(group1),colMeans(group2))
+  t.obs <- euclidean_distance(colMeans(group1),colMeans(group2))
   k <- dim(group1)[1]
   M <- rbind(group1,group2)
   n <- dim(M)[1]
   count <- 0
   for (i in 1:num.repeats){
     permutation <- sample(1:n)
-    t <- euclidean.distance(colMeans(M[permutation[1:k],]),colMeans(M[permutation[(k+1):n],]))
+    t <- euclidean_distance(colMeans(M[permutation[1:k],]),colMeans(M[permutation[(k+1):n],]))
     if (t >= t.obs)
       count <- count + 1
   }
