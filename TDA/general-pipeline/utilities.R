@@ -29,15 +29,18 @@ remove_dimzero_from_diagrams <- function(PD){
 
 
 #compute and save a list of persistence diagrams
-compute_PDs <- function(data_files, cell_types, csv_files_path, group_name, save_location){
+compute_PDs <- function(csv_files_path, group_name, cell_types, save_location){
+  
+  # recursively find CSV files within directory and return file-names in a list
+  data_files <- get_csvs(csv_files_path)
   
   PDs <- list()
   max_birth <- list() 
   max_death <- list() 
   for (i in 1:length(data_files)){
     print(sprintf("Processing file %s", data_files[i]))
-    path <- concat_path(csv_files_path, data_files[i])
-    cells <- read.csv(path)
+    file_path <- concat_path(csv_files_path, data_files[i])
+    cells <- read.csv(file_path)
     cells <- cells[which(is.element(cells[,8], cell_types)),]
     #compute persistence homology using Delaunay complex filtration (also known as Alpha complex filtration)
     PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
@@ -88,13 +91,16 @@ plot_PDs <- function(group_name, birth, death, save_location, save_plot){
 
 
 #plot representative cycles that persist (live) over a certain threshold
-plot_representative_cycles <- function(data_files, cell_types, csv_files_path, threshold){
+plot_representative_cycles <- function(csv_files_path, cell_types, threshold, group_name, save_location, save_plot){
+  
+  # recursively find CSV files within directory and return file-names in a list
+  data_files <- get_csvs(csv_dir_path)
   
   par(pty="s")
   for (i in 1:length(data_files)){
     print(sprintf("Processing file %s", data_files[i]))
-    path <- concat_path(csv_files_path, data_files[i])
-    cells <- read.csv(path)
+    file_path <- concat_path(csv_files_path, data_files[i])
+    cells <- read.csv(file_path)
     cells <- cells[which(is.element(cells[,8], cell_types)),]
     #compute persistence homology using Delaunay complex filtration (also known as Alpha complex filtration)
     filtration <- alphaComplexFiltration(cells[,1:2], printProgress = TRUE)
@@ -114,6 +120,14 @@ plot_representative_cycles <- function(data_files, cell_types, csv_files_path, t
           } 
         } 
       }
+    }
+    #location of saved PDs
+    path <- concat_path(save_location, group_name)
+    
+    #if TRUE save plot
+    if (save_plot){
+      dev.copy(pdf, concat_path(path, paste0(group_name,"_repr_cycles_", i, ".pdf")))
+      invisible(dev.off())
     }
   }
 }

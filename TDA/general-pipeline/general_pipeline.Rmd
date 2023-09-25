@@ -1,7 +1,7 @@
 ## Topological data analysis
 
-#### Dependencies
 
+#### Dependencies
 *Install the following libraries before running the TDA pipeline.*
 
 ```{r}
@@ -22,14 +22,13 @@ library("TDA")
 working_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/TDA/general-pipeline"
 ```
 
-## Functions
+## Load necessary functions
 
 ```{r}
-# get helper functions
 source("utilities.R")
 ```
 
-## Create a folder with subfolders for two data groups for storing saved tda computations
+## Create a folder with a subfolder for each data group for storing saved tda computations
 *You only need to run this block once*
 
 ```{r, include=FALSE}
@@ -44,7 +43,8 @@ for (i in 1:length(groups)){
 }
 ```
 
-## Create a single csv file for storing some necessary parameters (max birth and max death) obtained from all data groups
+## Create a single csv file for storing necessary parameters (max birth and max death) obtained from all data groups
+*You only need to run this block once*
 
 ```{r}
 max_values <- data.frame(matrix(ncol = 2, nrow = 0))
@@ -59,6 +59,7 @@ write.csv(max_values, concat_path(saved_computations,"max-values.csv"), row.name
 #specify location path of the file with the cell type codes and their colors
 cell_types_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Discretization/cell_colors.csv"
 
+#read all cell type codes from your designated file
 cell_types_file <- read.csv(cell_types_path)
 all_cell_types <- cell_types_file$Code
 
@@ -77,16 +78,13 @@ group <- "group_2"
 
 # specify location path of the csv files of that group
 csv_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Discretized-images/25"
-
-# recursively find CSV files within directory and return file-names in a list
-files <- get_csvs(csv_dir_path)
 ```
 
-## Compute persistence diagrams
+## Compute persistence diagrams and save them
 *We use Delaunay complex filtration to compute persistence diagrams*
 
 ```{r}
-compute_PDs(files, cell_types, csv_dir_path, group, saved_computations)
+compute_PDs(csv_dir_path, group, cell_types, saved_computations)
 ```
 
 ## Determine the max birth and max death among all data files
@@ -101,7 +99,7 @@ max_birth <- max(max_values$maxbirth)
 max_death <- max(max_values$maxdeath)
 ```
 
-## Plot persistence diagrams 
+## Plot persistence diagrams
 
 ```{r}
 save_plot <- TRUE #set FALSE if you don't want to save plots
@@ -113,14 +111,15 @@ plot_PDs(group, max_birth, max_death, saved_computations, save_plot)
 
 ```{r}
 #choose a persistence threshold
-persistence_threshold <- 20 
+persist_threshold <- 20 
+
+save_plot <- TRUE #set FALSE if you don't want to save plots
 
 #plot representative cycles with persistence above the chosen threshold
-plot_representative_cycles(files, cell_types, csv_dir_path, persistence_threshold)
+plot_representative_cycles(csv_dir_path, cell_types, persist_threshold, group, saved_computations, save_plot)
 ```
 
-## Compute persistence landscapes (PLs) and automatically save them
-*Since persistence computations might take long time to compute for a large data set, we automatically saving them*
+## Compute persistence landscapes and save them
 
 ```{r}
 #choose a discretization step
@@ -132,15 +131,15 @@ compute_PLs(group, max_birth, max_death, discr_step, saved_computations)
 ## Plot persistence landscapes 
 
 ```{r}
-save_plot <- TRUE #set FALSE if you don't want to save plots
-
 #choose a discretization step
 discr_step <- 0.3
+
+save_plot <- TRUE #set FALSE if you don't want to save plots
 
 plot_PLs(group, max_birth, max_death, discr_step, saved_computations, save_plot)
 ```
 
-## Compute the average persistence landscape
+## Compute the average persistence landscape and save it
 
 ```{r}
 compute_avgPL(group, max_birth, max_death, discr_step, saved_computations)
@@ -154,7 +153,7 @@ save_plot <- TRUE #set FALSE if you don't want to save plots
 plot_avgPL(group, max_birth, max_death, discr_step, saved_computations, save_plot)
 ```
 
-## Plot the difference in persistence landscapes of two data sets
+## Plot the difference of average persistence landscapes of two data sets
 
 ```{r}
 #BEFORE RUNNING THIS CODE BLOCK AND THE NEXT ONE, COMPUTE PERSISTENCE LANSCAPES AND AVERAGE PERSISTENCE LANDSCAPES FOR ANOTHER DATA GROUP
