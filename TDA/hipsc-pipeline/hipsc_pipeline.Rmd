@@ -55,7 +55,7 @@ nwells <- 3
 npositions <- 5
 ```
 
-## Load data
+## Data files 
 
 ```{r} 
 #specify the working directory path
@@ -131,9 +131,9 @@ for (i in 1:length(files)){
     #homology in degree 1
     PDs[[i]][[k]]$pairs[[2]] <- sqrt(PDs[[i]][[k]]$pairs[[2]])
     #max birth of 1-degree persistence diagrams 
-    max_birth[[i]][[k]] <- max(PDs[[i]]$pairs[[2]][,1])
+    max_birth[[i]][[k]] <- max(PDs[[i]][[k]]$pairs[[2]][,1])
     #max death of 1-degree persistence diagrams 
-    max_death[[i]][[k]] <- max(PDs[[i]]$pairs[[2]][,2])
+    max_death[[i]][[k]] <- max(PDs[[i]][[k]]$pairs[[2]][,2])
   }
 }
 
@@ -151,6 +151,24 @@ dir.create("saved_computations")
 save_filename <-  "persistence-diagrams-red.RData" 
 save_file_location <- paste0(working_dir_path, "/saved_computations/") 
 save(PDs, max_birth, max_death, file=paste0(save_file_location,save_filename)) 
+```
+
+```{r}
+max_birth <- list()
+max_death <- list()
+for (i in 1:length(files)){
+  max_birth[[i]] <- list()
+  max_death[[i]] <- list()
+  for (k in 1:npatches){
+    #max birth of 1-degree persistence diagrams 
+    max_birth[[i]][[k]] <- max(PDs[[i]][[k]]$pairs[[2]][,1])
+    #max death of 1-degree persistence diagrams 
+    max_death[[i]][[k]] <- max(PDs[[i]][[k]]$pairs[[2]][,2])
+  }
+}
+
+max_birth <- max(unlist(max_birth))
+max_death <- max(unlist(max_death))
 ```
 
 ## Plot persistence diagrams
@@ -174,6 +192,8 @@ for (i in 1:length(files)){
 load(paste0(paste0(working_dir_path, "/saved_computations/"), "persistence-diagrams-red.RData"))
 
 max_x <- (max_death+max_birth)/2 + 5
+dx <- 0.3 #discretization step
+
 PLs <- list()
 for (i in 1:length(files)){ 
   PLs[[i]] <- list()
@@ -284,7 +304,6 @@ for (i in 2:length(files)){
 
 if (cell_type == "R+G-"){
   vec_red <- vectorized_PLs
-  PL_length_red <- landscape_length
   
   #save the vectorized persistence landscapes and their length
   save_filename <-  "PLs-red.RData" 
@@ -292,7 +311,6 @@ if (cell_type == "R+G-"){
   save(vec_red, PL_length_red, file=paste0(save_file_location,save_filename)) 
 } else if (cell_type == "R-G+"){
   vec_gr <- vectorized_PLs
-  PL_length_gr <- landscape_length
   
   #save the vectorized persistence landscapes and their length
   save_filename <-  "PLs-gr.RData" 
@@ -300,7 +318,6 @@ if (cell_type == "R+G-"){
   save(vec_gr, PL_length_gr, file=paste0(save_file_location,save_filename)) 
 } else if (cell_type == "R+G+"){
   vec_pos <- vectorized_PLs
-  PL_length_pos <- landscape_length
   
   #save the vectorized persistence landscapes and their length
   save_filename <-  "PLs-pos.RData" 
@@ -308,7 +325,6 @@ if (cell_type == "R+G-"){
   save(vec_pos, PL_length_pos, file=paste0(save_file_location,save_filename)) 
 } else if (cell_type == "R-G-"){
   vec_neg <- vectorized_PLs
-  PL_length_neg <- landscape_length
   
   #save the vectorized persistence landscapes and their length
   save_filename <-  "PLs-neg.RData" 
