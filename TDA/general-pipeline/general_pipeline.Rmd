@@ -19,7 +19,7 @@ library("TDA")
 ## Set working directory
 
 ```{r}
-working_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/TDA/general-pipeline"
+working_dir_path <- setwd("~/Documents/GitHub/TDA-Microscopy-Pipeline/TDA/general-pipeline")
 ```
 
 ## Load necessary functions
