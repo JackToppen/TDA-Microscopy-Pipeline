@@ -12,7 +12,7 @@ install.packages(c("TDA", "Matrix"))
 ## Load libraries
 
 ```{r}
-library("Matrix") # package for sparse matrices
+library("Matrix") #package for sparse matrices
 library("TDA")
 ```
 
@@ -63,8 +63,9 @@ cell_types_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Discretization/ce
 cell_types_file <- read.csv(cell_types_path)
 all_cell_types <- cell_types_file$Code
 
-#pick a cell type or a union of cell types to which apply TDA pipeline
-cell_types <- all_cell_types[3]
+# indicate cell types for only including specific cells 
+cell_types <- all_cell_types[2]   # either a single value or a vector
+index <- NaN    # default index for cell types is the last column
 
 print("Cell types used:")
 print(cell_types)
@@ -84,11 +85,11 @@ csv_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Discretized-images/2
 *We use Delaunay complex filtration to compute persistence diagrams*
 
 ```{r}
-compute_PDs(csv_dir_path, group, cell_types, saved_computations)
+compute_PDs(csv_dir_path, group, saved_computations, cell_types, index)
 ```
 
 ## Determine the max birth and max death among all data files
-*This is needed to generate plots with the same scale and make sure that PLs have the same length*
+*This is needed to generate all plots with the same scale and make sure that persistence landscapes have the same length*
 
 ```{r}
 #BEFORE RUNNING THIS CODE BLOCK AND THE NEXT ONES, COMPUTE PERSISTENCE DIAGRAMS FOR ALL DATA GROUPS

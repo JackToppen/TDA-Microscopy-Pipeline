@@ -29,7 +29,7 @@ remove_dimzero_from_diagrams <- function(PD){
 
 
 #compute and save a list of persistence diagrams
-compute_PDs <- function(csv_files_path, group_name, cell_types, save_location){
+compute_PDs <- function(csv_files_path, group_name, save_location, types, index = NaN){
   
   # recursively find CSV files within directory and return file-names in a list
   data_files <- get_csvs(csv_files_path)
@@ -41,7 +41,18 @@ compute_PDs <- function(csv_files_path, group_name, cell_types, save_location){
     print(sprintf("Processing file %s", data_files[i]))
     file_path <- concat_path(csv_files_path, data_files[i])
     cells <- read.csv(file_path)
-    cells <- cells[which(is.element(cells[,8], cell_types)),]
+    # if no index provided, use last column
+    if (is.na(index)) index <- ncol(cells)
+    
+    # if there are cell types specified, only include those rows
+    if (!any(is.na(types))) {
+      if (length(types) > 1) {
+        cells <- cells[cells[,index] %in% types,]    # if a vector is provided
+      } else {
+        cells <- cells[cells[,index] == types,]    # if a single value
+      }
+    }
+    
     #compute persistence homology using Delaunay complex filtration (also known as Alpha complex filtration)
     PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
     PDs[[i]] <- PH[["diagram"]]
@@ -76,7 +87,7 @@ plot_PDs <- function(group_name, birth, death, save_location, save_plot){
   PD_list <- get(load(concat_path(path, paste0(group_name, "_PDs.RData"))))
   
   par(pty="s")
-  max_radius <- max(birth, death)
+  max_radius <- max(birth, death)+5
   for (i in 1:length(PD_list)){
       plot(PD_list[[i]][,2:3], asp=1, xlim=c(0, max_radius) , ylim=c(0, max_radius), xlab='', ylab='', col='orange', bty="o", pch=20, cex=1)
       abline(0,1)
