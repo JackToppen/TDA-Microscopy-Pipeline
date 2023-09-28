@@ -76,6 +76,7 @@ compute_PDs <- function(csv_files_path, group_name, save_location, types, index 
   
   #save persistence diagrams
   save(PDs, file=concat_path(path, paste0(group_name,"_PDs.RData")))
+  print(sprintf("Persistence diagrams are saved in %s", concat_path(path, paste0(group_name,"_PDs.RData"))))
 }
 
 
@@ -85,6 +86,10 @@ plot_PDs <- function(group_name, birth, death, save_location, save_plot){
   #location of saved PDs
   path <- concat_path(save_location, group_name)
   PD_list <- get(load(concat_path(path, paste0(group_name, "_PDs.RData"))))
+  
+  if (save_plot){
+    print(sprintf("Persistence diagrams plots are saved in %s", path))
+  }
   
   par(pty="s")
   max_radius <- max(birth, death)+5
@@ -106,6 +111,9 @@ plot_representative_cycles <- function(csv_files_path, cell_types, threshold, gr
   
   # recursively find CSV files within directory and return file-names in a list
   data_files <- get_csvs(csv_dir_path)
+  
+  #location of saved PDs
+  path <- concat_path(save_location, group_name)
   
   par(pty="s")
   for (i in 1:length(data_files)){
@@ -132,14 +140,16 @@ plot_representative_cycles <- function(csv_files_path, cell_types, threshold, gr
         } 
       }
     }
-    #location of saved PDs
-    path <- concat_path(save_location, group_name)
-    
+   
     #if TRUE save plot
     if (save_plot){
       dev.copy(pdf, concat_path(path, paste0(group_name,"_repr_cycles_", i, ".pdf")))
       invisible(dev.off())
     }
+  }
+  
+  if (save_plot){
+    print(sprintf("Representative cycle are saved in %s", path))
   }
 }
 
@@ -149,6 +159,11 @@ compute_PLs <- function(group_name, birth, death, discr_step, save_location){
   
   #location of saved PLs
   path <- concat_path(save_location, group_name)
+  
+  if (save_plot){
+    print(sprintf("Persistence landscapes are saved in %s", concat_path(path, paste0(group_name,"_PLs.RData"))))
+  }
+  
   PD_list <- get(load(concat_path(path, paste0(group_name, "_PDs.RData"))))
   
   max_x <- (death+birth)/2 + 5
@@ -168,6 +183,11 @@ plot_PLs <- function(group_name, birth, death, discr_step, save_location, save_p
   
   #location of saved PLs
   path <- concat_path(save_location, group_name)
+  
+  if (save_plot){
+    print(sprintf("Persistence landscape plots are saved in %s", concat_path(path, group_name)))
+  }
+  
   PL_list <- get(load(concat_path(path, paste0(group_name, "_PLs.RData"))))
   
   par(pty="s")
@@ -228,16 +248,20 @@ compute_avgPL <- function(group_name, birth, death, discr_step, save_location){
   
   #location of saved PLs
   path <- concat_path(save_location, group_name)
+  
+  if (save_plot){
+    print(sprintf("Average persistence landscape is saved in %s", concat_path(path, paste0(group_name,"_avgPL.RData"))))
+  }
+  
   PL_list <- get(load(concat_path(path, paste0(group_name, "_PLs.RData"))))
   
   max_x <- (death+birth)/2 + 5
   radius_values <- seq(0, max_x, discr_step)
   PL_matrix <- landscape_matrix_from_list(PL_list)
   average_PL_vector <- colMeans(PL_matrix, sparseResult = TRUE)
-  average_PL <- landscape_from_vector(average_PL_vector, radius_values)
   
   #save the list of persistence diagrams, the max birth and max death values
-  save(average_PL, file=concat_path(path, paste0(group_name,"_avgPL.RData")))
+  save(average_PL_vector, file=concat_path(path, paste0(group_name,"_avgPL.RData")))
 }
 
 
@@ -246,7 +270,11 @@ plot_avgPL <- function(group_name, birth, death, discr_step, save_location, save
   
   #location of a saved average PL
   path <- concat_path(save_location, group_name)
-  average_PL <- get(load(concat_path(path, paste0(group_name, "_avgPL.RData"))))
+  average_PL_vector <- get(load(concat_path(path, paste0(group_name, "_avgPL.RData"))))
+  
+  if (save_plot){
+    print(sprintf("Average persistence landscape plot is saved in %s", path))
+  }
   
   par(pty="s")
   mycolors <- c("midnightblue","slateblue", "royalblue2", "deepskyblue4", "deepskyblue3",
@@ -256,9 +284,12 @@ plot_avgPL <- function(group_name, birth, death, discr_step, save_location, save
   max_x <- (death+birth)/2 + 5
   radius_values <- seq(0, max_x, discr_step)
   max_height <- death/2 
+  
+  average_PL <- landscape_from_vector(average_PL_vector, radius_values)
+  
   plot(radius_values, average_PL[1,], type="l", ylab="", xlab="", xlim=c(0, max_x) , ylim=c(0, max_height), ann=FALSE, bty="o",col=mycolors[1])
-  for(k in 2:dim(average_PL)[1]){
-    lines(radius_values,average_PL[k,],type="l",col=mycolors[k %% 15])
+  for (k in 2:dim(average_PL)[1]){
+    lines(radius_values, average_PL[k,],type="l",col=mycolors[k %% 15])
   }
   
   #if TRUE save plot
@@ -272,28 +303,37 @@ plot_avgPL <- function(group_name, birth, death, discr_step, save_location, save
 #compute the difference between two average persistence landscapes 
 plot_avgPLs_difference <- function(groups, birth, death, discr_step, save_location, save_plot){
   
+  if (save_plot){
+    print(sprintf("Plot of the difference of two average persistence landscapes is saved in %s", save_location))
+  }
+  
   #location of the saved first average PL
   path_1 <- concat_path(save_location, groups[1])
-  average_PL1 <- get(load(concat_path(path_1, paste0(groups[1], "_avgPL.RData"))))
+  average_PL1_vector <- get(load(concat_path(path_1, paste0(groups[1], "_avgPL.RData"))))
   
   #location of the saved second average PL
   path_2 <- concat_path(save_location, groups[2])
-  average_PL2 <- get(load(concat_path(path_2, paste0(groups[2], "_avgPL.RData"))))
+  average_PL2_vector <- get(load(concat_path(path_2, paste0(groups[2], "_avgPL.RData"))))
   
-  max_x <- (max_birth+max_death)/2 + 5
-  max_height <- max_death/2
+  max_x <- (birth+death)/2 + 5
   radius_values <- seq(0, max_x, discr_step)
   
-  difference_matrix <- average_PL1 - average_PL2
+  length1 <- length(average_PL1_vector)
+  length2 <- length(average_PL2_vector)
+  difference_vector <- numeric(max(length1, length2))
+  difference_vector <- as(difference_vector, "sparseVector")
+  difference_vector[1:length1] = difference_vector[1:length1] + average_PL1_vector
+  difference_vector[1:length2] = difference_vector[1:length2] - average_PL2_vector
+  difference_avgPL <- landscape_from_vector(difference_vector, radius_values)
   
   par(pty="s")
   mycolors <- c("midnightblue","slateblue", "royalblue2", "deepskyblue4", "deepskyblue3",
                 "turquoise4", "chartreuse4","olivedrab4", "olivedrab3", "yellowgreen", 
                 "yellow3","gold3", "gold2","gold1", "gold" )
   
-  plot(radius_values, difference_matrix[2,], type="l", ylab="", xlab="", xlim=c(0, max_x), ylim=c(-max_height, max_height), ann=FALSE, bty="o",col=mycolors[1])
-  for(k in 2:dim(difference_matrix)[1]){
-    lines(radius_values, difference_matrix[k,],type="l",col=mycolors[k %% 15])
+  plot(radius_values, difference_avgPL[1,], type="l", ylab="", xlab="", xlim=c(0, max_x), ylim=c(min(difference_avgPL),max(difference_avgPL)), ann=FALSE, bty="o",col=mycolors[1])
+  for (k in 2:dim(difference_avgPL)[1]){
+     lines(radius_values, difference_avgPL[k, ], type="l",col=mycolors[k %% 15])
   }
   
   #if TRUE save plot
@@ -302,7 +342,6 @@ plot_avgPLs_difference <- function(groups, birth, death, discr_step, save_locati
     invisible(dev.off())
   }
 }
-
 
 #Euclidean distance between two vectors 
 euclidean_distance <- function(u, v) sqrt(sum((u - v) ^ 2))
