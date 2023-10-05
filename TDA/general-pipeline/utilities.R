@@ -155,14 +155,12 @@ plot_representative_cycles <- function(csv_files_path, cell_types, threshold, gr
 
 
 #compute and save a list of persistence landscapes
-compute_PLs <- function(group_name, birth, death, discr_step, save_location){
+compute_PLs <- function(group_name, birth, death, discr_step, save_location, save_csv){
   
   #location of saved PLs
   path <- concat_path(save_location, group_name)
   
-  if (save_plot){
-    print(sprintf("Persistence landscapes are saved in %s", concat_path(path, paste0(group_name,"_PLs.RData"))))
-  }
+  print(sprintf("Persistence landscapes are saved in %s", concat_path(path, paste0(group_name,"_PLs.RData"))))
   
   PD_list <- get(load(concat_path(path, paste0(group_name, "_PDs.RData"))))
   
@@ -175,6 +173,17 @@ compute_PLs <- function(group_name, birth, death, discr_step, save_location){
   
   #save persistence landscapes
   save(PLs, file=concat_path(path, paste0(group_name,"_PLs.RData")))
+  
+  #save persistence landscapes as csv
+  if (save_csv){
+    for (i in 1:length(PD_list)){ 
+       PLs_csv <- as.data.frame(PLs[[i]])
+       colnames(PLs_csv) <- radius_values   # name columns
+       depth <- paste0("depth_", 1:1000)
+       PLs_csv <- cbind(depth, PLs_csv)   
+       write.csv(PLs_csv, concat_path(path, paste0("PLs_", i,".csv")), row.names=FALSE)
+    }
+  }
 }
 
 
@@ -249,9 +258,7 @@ compute_avgPL <- function(group_name, birth, death, discr_step, save_location){
   #location of saved PLs
   path <- concat_path(save_location, group_name)
   
-  if (save_plot){
-    print(sprintf("Average persistence landscape is saved in %s", concat_path(path, paste0(group_name,"_avgPL.RData"))))
-  }
+  print(sprintf("Average persistence landscape is saved in %s", concat_path(path, paste0(group_name,"_avgPL.RData"))))
   
   PL_list <- get(load(concat_path(path, paste0(group_name, "_PLs.RData"))))
   
