@@ -1,16 +1,14 @@
 # Pipeline for Microscopy Image Analysis using TDA
 
 The pipeline has been introduced in *Hartsock
-et al 2023* manuscript. It consists of three sequential modules: (1) segmentation; (2) cell type identification; and (3) topological data anaysis (TDA). The pipeline's input is a collection of microscopy images and it main outputs are topological descriptors of multicellular patterns (persistence landscapes and average persistence landscapes).
+et al 2023* manuscript. It consists of three sequential modules: (1) Segmentation; (2) Cell type identification; and (3) Topological data anaysis (TDA). The pipeline's input is a collection of microscopy images and it main outputs are topological descriptors of multicellular patterns (persistence landscapes and average persistence landscapes).
 
 ### Microscopy data
-The `example dataset` and the `complete dataset` used in *Hartsock
-et al 2023* manuscript can be found on [Figshare](https://figshare.com/projects/TDA_Microscopy_Data/148855). The example dataset consists of two different Dox (doxycycline) treatment groups each containing 16 small images. The complete dataset consists of two image groups based on biological markers pan-GATA6 and HA. Each group contains 4 various Dox treatment subgroups and every one of them consists of 15 large images.
+Twos datasets, "Example" and "Complete", used in *Hartsock et al 2023* manuscript can be found on [Figshare](https://figshare.com/projects/TDA_Microscopy_Data/148855). The "Complete" dataset consists of multiple microscopy images of cells labeled with either pan-GATA6 and HA markers across four Doxycycline (Dox) treatment groups from 0 ng/mL to 25 ng/mL, while the "Example" dataset only has two of the four groups (low: 0, high: 25) each containing 16 small images sampled from the "Complete" dataset.
 
-`slicer.py` can divide larger microscopy images, as was done in *Hartsock
-et al 2023* manuscript, into smaller patches. For our pipeline, we suggest using images/patches of size at most $1000 \times 1000$ pixels.
+Provided script `slicer.py` can divide larger microscopy images, as was done in *Hartsock et al 2023* manuscript, into smaller patches. This is how the "Example" dateset was generated. For our pipeline, we suggest using images/patches of size at most 1000x1000 pixels.
 
-## 1. Segmentation (Python)
+## 1. Segmentation - Python
 This section has been adapted from *Nikitina et al 2020* to interface with
 the subsequent sections of the pipeline. Once downloaded locally, the
 locations of the microscopy images should be updated, and some of the
@@ -22,7 +20,7 @@ Please install the necessary Python dependencies for this section.
 pip install -r requirements.txt
 ```
 
-The segmentation section can be run in the Jupyter Notebook. After instalation, open Jupyter Notebook with the command line below.
+The segmentation section should be run with a [Jupyter Notebook](https://jupyter.org/). After installation, open Jupyter with the command line below.
 
 ```
 jupyter notebook
@@ -34,12 +32,16 @@ CSVs formatted from left to right as follows.
 ```
 | X coord | Y coord | nuclear marker | marker #1 | marker #2 | ... |
 ```
+An example CSV following proper segmentation of the Example dataset, is provided in the module.
 
-## 2. Cell type identification (R)
-We recommend running all Rmd files in RStudio.
-The `cell_colors.csv` file is used to specify how cells are labeled in the discretized images. Binary strings encode high (1) or low (0) signal of a marker from the microscopy images. The mapping from binary string to cell color should follow the order of the measured signals from the segmentation section CSVs. For instance, by running `pipeline.Rmd` on a segmented example dataset, each cell is assigned to one of the four cell types: 0, 1, 10, or 11.  
+## 2. (Cell type) Identification - R
+We recommend running all R Markdown files in [RStudio](https://posit.co/download/rstudio-desktop/). Similar to the Segmentation module, please update local paths to the segmentation outputs
 
-## 3. TDA (R)
+The `cell_colors.csv` file is necessary to specify how cell types are shown in the psuedo-microscopy images. Binary strings encode low (0) or high (1) discretized signals of one or more markers from the segmented microscopy images. The mapping from binary string to cell type color should follow the order of the measured signals from left to right in the segmentation CSVs as shown in the example header above.
+
+An example CSV and image following proper cell type identification of the Example dataset, is provided in the module.
+
+## 3. Topological Data Analysis (TDA) - R
 There are two R folders within this section. `general_pipeline` folder should
 be used for the example dataset and for the most applications of the pipeline. The file `general_pipeline.Rmd` is designed to analyse two discretized microscopy data groups one at a time and in the end compare their tda outputs. Note that different stages of the analysis in the file are splitted into separate blocks. After specifying location of CSV files of a discretized microscopy data group, choose which cell types to use for computations. Next, for each image, the persistence diagram is generated and then plotted. The representative cycles of detected holes in multicellular patterns are also plotted. Later, using persistence diagram computations, the persistence landscapes are generated and then ploted. Furthermore, for each data group, the average persistence landscape is produced and plotted. After persistence diagrams, persistence landscapes, and average persistence landscapes are computed for both data groups, the difference of two average persistence landscapes is plotted. Also, the permutation test is performed on the persistence landscapes of the two data groups, and the p-value is calculated. Lastly, in `general_pipeline.html` some of the outputs for the example dataset are shown.    
 
