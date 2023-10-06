@@ -141,7 +141,6 @@ plot_representative_cycles <- function(csv_files_path, cell_types, threshold, gr
       }
     }
    
-
     #if TRUE save plot
     if (save_plot){
       dev.copy(pdf, concat_path(path, paste0(group_name,"_repr_cycles_", i, ".pdf")))
@@ -163,7 +162,6 @@ compute_PLs <- function(group_name, birth, death, discr_step, save_location, sav
   
   print(sprintf("Persistence landscapes are saved in %s", concat_path(path, paste0(group_name,"_PLs.RData"))))
   
-
   PD_list <- get(load(concat_path(path, paste0(group_name, "_PDs.RData"))))
   
   max_x <- (death+birth)/2 + 5
@@ -194,13 +192,11 @@ plot_PLs <- function(group_name, birth, death, discr_step, save_location, save_p
   
   #location of saved PLs
   path <- concat_path(save_location, group_name)
-
   
   if (save_plot){
     print(sprintf("Persistence landscape plots are saved in %s", concat_path(path, group_name)))
   }
   
-
   PL_list <- get(load(concat_path(path, paste0(group_name, "_PLs.RData"))))
   
   par(pty="s")
@@ -261,7 +257,6 @@ compute_avgPL <- function(group_name, birth, death, discr_step, save_location){
   
   #location of saved PLs
   path <- concat_path(save_location, group_name)
-
   
   print(sprintf("Average persistence landscape is saved in %s", concat_path(path, paste0(group_name,"_avgPL.RData"))))
   
@@ -282,7 +277,6 @@ plot_avgPL <- function(group_name, birth, death, discr_step, save_location, save
   
   #location of a saved average PL
   path <- concat_path(save_location, group_name)
-  
   average_PL_vector <- get(load(concat_path(path, paste0(group_name, "_avgPL.RData"))))
   
   if (save_plot){
@@ -316,7 +310,6 @@ plot_avgPL <- function(group_name, birth, death, discr_step, save_location, save
 #compute the difference between two average persistence landscapes 
 plot_avgPLs_difference <- function(groups, birth, death, discr_step, save_location, save_plot){
   
-
   if (save_plot){
     print(sprintf("Plot of the difference of two average persistence landscapes is saved in %s", save_location))
   }
@@ -345,7 +338,6 @@ plot_avgPLs_difference <- function(groups, birth, death, discr_step, save_locati
                 "turquoise4", "chartreuse4","olivedrab4", "olivedrab3", "yellowgreen", 
                 "yellow3","gold3", "gold2","gold1", "gold" )
   
-
   plot(radius_values, difference_avgPL[1,], type="l", ylab="", xlab="", xlim=c(0, max_x), ylim=c(min(difference_avgPL),max(difference_avgPL)), ann=FALSE, bty="o",col=mycolors[1])
   for (k in 2:dim(difference_avgPL)[1]){
      lines(radius_values, difference_avgPL[k, ], type="l",col=mycolors[k %% 15])
@@ -357,7 +349,6 @@ plot_avgPLs_difference <- function(groups, birth, death, discr_step, save_locati
     invisible(dev.off())
   }
 }
-
 
 #Euclidean distance between two vectors 
 euclidean_distance <- function(u, v) sqrt(sum((u - v) ^ 2))
