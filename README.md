@@ -34,12 +34,14 @@ CSVs formatted from left to right as follows.
 ```
 An example CSV following proper segmentation of the Example dataset, is provided in the module.
 
+
 ## 2. (Cell type) Identification - R
 We recommend running all R Markdown files in [RStudio](https://posit.co/download/rstudio-desktop/). Similar to the Segmentation module, please update local paths to the segmentation outputs
 
 The `cell_colors.csv` file is necessary to specify how cell types are shown in the psuedo-microscopy images. Binary strings encode low (0) or high (1) discretized signals of one or more markers from the segmented microscopy images. The mapping from binary string to cell type color should follow the order of the measured signals from left to right in the segmentation CSVs as shown in the example header above.
 
 An example CSV and image following proper cell type identification of the Example dataset, is provided in the module.
+
 
 ## 3. Topological Data Analysis (TDA) - R
 There are two R folders within this section. `general_pipeline` folder should

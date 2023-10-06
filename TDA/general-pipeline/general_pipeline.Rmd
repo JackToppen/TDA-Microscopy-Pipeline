@@ -4,12 +4,14 @@ output:
   html_document:
    df_print: paged
 ---
+
 #### Dependencies
 *Install the following libraries before running the TDA pipeline.*
 
 ```{r}
 install.packages(c("TDA", "Matrix"))
 ```
+
 ---------------------------
 
 ### Load libraries
@@ -18,6 +20,7 @@ install.packages(c("TDA", "Matrix"))
 library("Matrix") #package for sparse matrices
 library("TDA")
 ```
+
 
 ### Set working directory
 
@@ -50,15 +53,18 @@ for (i in 1:length(groups)){
 *You only need to run this block once*
 
 ```{r parameters-file}
+
 max_values <- data.frame(matrix(ncol = 2, nrow = 0))
 colnames(max_values) <- c("maxbirth", "maxdeath")  
 
 write.csv(max_values, concat_path(saved_computations,"max-values.csv"), row.names=FALSE)
 ```
 
+
 ### Choose cell types
 
 ```{r cell-types}
+
 #specify location path of the file with the cell type codes and their colors
 cell_types_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Discretization/cell_colors.csv"
 
@@ -67,6 +73,7 @@ cell_types_file <- read.csv(cell_types_path)
 all_cell_types <- cell_types_file$Code
 
 # indicate cell types for only including specific cells 
+
 cell_types <- all_cell_types[2]   # this can either be a single value or a vector
 
 index <- NaN    # default index for cell types is the last column
@@ -103,6 +110,7 @@ max_birth <- max(max_values$maxbirth)
 max_death <- max(max_values$maxdeath)
 ```
 
+
 ### Plot persistence diagrams
 
 ```{r plot-PDs}
@@ -110,6 +118,7 @@ save_plot <- TRUE #set FALSE if you don't want to save plots
 
 plot_PDs(group, max_birth, max_death, saved_computations, save_plot)
 ```
+
 
 ### Plot representative cycles that persist (live) over a certain threshold
 
@@ -122,6 +131,7 @@ save_plot <- TRUE #set FALSE if you don't want to save plots
 #plot representative cycles with persistence above the chosen threshold
 plot_representative_cycles(csv_dir_path, cell_types, persist_threshold, group, saved_computations, save_plot)
 ```
+
 
 ## IV. Compute persistence landscapes and save them
 *You need to have persistence diagrams computed first*
@@ -138,10 +148,12 @@ compute_PLs(group, max_birth, max_death, discr_step, saved_computations, save_co
 ### Plot persistence landscapes 
 
 ```{r plot-PLs}
+
 save_plot <- TRUE #set FALSE if you don't want to save plots
 
 plot_PLs(group, max_birth, max_death, discr_step, saved_computations, save_plot)
 ```
+
 
 ## V. Compute the average persistence landscape and save it
 *You need to have persistence landscapes computed first*
@@ -153,10 +165,12 @@ compute_avgPL(group, max_birth, max_death, discr_step, saved_computations)
 ### Plot the average persistence landscape
 
 ```{r plot-average-PLs}
+
 save_plot <- TRUE #set FALSE if you don't want to save plots
 
 plot_avgPL(group, max_birth, max_death, discr_step, saved_computations, save_plot)
 ```
+
 
 ## At this point, you need to have computed persistence diagrams, persistence landscapes, and average persistence landscapes for BOTH groups
 
@@ -170,6 +184,7 @@ save_plot <- TRUE #set FALSE if you don't want to save plots
 
 plot_avgPLs_difference(groups, max_birth, max_death, discr_step, saved_computations, save_plot)
 ```
+
 
 ## VII. Perform a permutation test on persistence landscapes from two data groups
 *You need to have computed persistence landscapes for both groups*
