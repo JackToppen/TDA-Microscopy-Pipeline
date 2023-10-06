@@ -1,0 +1,166 @@
+# Topological Data Analysis of discretized microscopy images
+# Iryna Hartsock, February 2023
+------------------------------------------------------------------------
+
+#### Dependencies
+
+*Install the following libraries before running the TDA pipeline.*
+
+```{r}
+install.packages(c("TDA", "Matrix"))
+```
+
+------------------------------------------------------------------------
+## Load libraries
+
+```{r, include=FALSE}
+library("Matrix") # package for sparse matrices
+library("TDA")
+```
+
+## Functions
+*Pull generalized functions for TDA computations and for processing the CSV files from the discretization pipeline.*
+
+```{r}
+# get helper functions
+source("utilities.R")
+```
+
+## Set path to TDA folder and create a folder for storing saved tda computations
+
+```{r, include=FALSE}
+# specify the working directory path
+working_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/TDA"
+
+dir.create("saved_computations")
+```
+
+## Load data
+
+```{r}
+# specify location path of the file with cell type codes
+csv_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Discretized-images/0"
+
+
+# recursively finds CSV files within directory and returns file-names in a list
+files <- get_csvs(csv_dir_path)
+# number of files
+nfiles <- length(files)
+```
+
+## Choose the cell types
+
+```{r}
+#specify location path of the file with the cell type codes (and their colors)
+cell_types_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Discretization/cell_colors.csv"
+
+cell_types_file <- read.csv(cell_types_path)
+all_cell_types <- cell_types_file$Code
+
+#pick the cell types to which apply TDA pipeline
+cell_types <- all_cell_types[3]
+
+print("Cell types used:")
+print(cell_types)
+```
+
+## Compute persistence diagrams and automatically save them
+*We use Delaunay complex filtration to compute persistence diagrams*
+*Since persistence computations might take long time to compute for a large data set, we automatically saving them in a separate folder, together with max_birth and max_death values*
+
+```{r}
+#name a file where to store persistence diagrams (change the name of the file when do computation for another dataset)
+save_PD_filename <-  "persistence_diagrams1.RData"
+
+#change PDs1 to PDs2 when you repeat this computation for another dataset
+PDs1 <- diagrams_list(files, cell_types, csv_dir_path, save_PD_filename, paste0(working_dir_path, "/saved_computations/"))
+```
+
+## Plot persistence diagrams 
+*The scale of all plots are the same and is determined by max birth and max death values*
+
+```{r}
+#load saved persistence diagrams
+load(paste0(paste0(working_dir_path, "/saved_computations/"),save_PD_filename))
+
+plot_diagrams_from_list(PDs1, nfiles, max_birth, max_death)
+```
+
+## Plot representative cycles that persist (live) over a certain threshold
+
+```{r}
+#choose persistence threshold
+persistence_threshold <- 20 
+
+plot_representative_cycles(files, cell_types, csv_dir_path, persistence_threshold)
+```
+
+## Compute persistence landscapes (PLs) and automatically save them
+*Since persistence computations might take long time to compute for a large data set, we automatically saving them, together with radius_values at which PLs are computed*
+
+```{r}
+#choose a discretization step
+discretization_step <- 0.3
+
+#name a file where to store persistence landscapes (change the name of the file when do computation for another dataset)
+save_PL_filename <-  "persistence_landscapes1.RData"
+
+#change max_birth1, max_death1 to max_birth2, max_death2 when you repeat this computation for another dataset
+max_birth1 <- max_birth
+max_death1 <- max_death
+
+#change PLs1 to PLs2 when you repeat this computation for another dataset
+PLs1 <- landscapes_list(PDs1, nfiles, max_birth1, max_death1, discretization_step, save_PL_filename, paste0(working_dir_path, "/saved_computations/"))
+```
+
+## Plot persistence landscapes 
+*Only the first 1000 landscapes are plotted*
+
+```{r}
+#load saved persistence landscapes
+load(paste0(paste0(working_dir_path, "/saved_computations/"), save_PL_filename))
+
+plot_landscapes_from_list(PLs1, nfiles, max_birth1, max_death1, discretization_step)
+```
+
+## Compute the average persistence landscape and automatically save it, 
+*Since for different datasets the max_birth and max_death values might be different, we save them*
+
+```{r}
+#name a file where to store average persistence landscapes (change the name of the file when do computation for another dataset)
+save_avgPL_filename <- "average_PL1.RData"
+
+#change avgPLs1 to avgPLs2 when you repeat this computation for another dataset
+avgPL1 <- average_persistence_landscape(PLs1, max_birth1, max_death1, save_avgPL_filename, paste0(working_dir_path, "/saved_computations/"))
+```
+
+## Plot the average persistence landscape
+
+```{r}
+load(paste0(paste0(working_dir_path, "/saved_computations/"), "average_PL1.RData"))
+
+plot_average_persistence_landscape(avgPL1, max_birth1, max_death1, discretization_step)
+```
+
+## Plot the difference in persistence landscapes of two data sets
+*Before running the next block of code, repeat computations above for two datasets that you would like to compare*
+*Make sure to save all computations for the other dataset under different filenames*
+
+```{r}
+load(paste0(paste0(working_dir_path, "/saved_computations/"), "average_PL1.RData"))
+load(paste0(paste0(working_dir_path, "/saved_computations/"), "average_PL2.RData"))
+
+plot_difference_average_PL(avgPL1, avgPL2, max_birth1, max_death1, max_birth2, max_death2, discretization_step)
+```
+
+## Perform a permutation test on persistence landscapes
+*Run the above pipeline for two distinct groups that you would like to compare and use obtained vectorized persistence landscapes for permutation test*
+
+```{r}
+#load saved lists of persistence landscape of two groups
+load(paste0(paste0(working_dir_path, "/saved_computations/"), "persistence_landscapes1.RData"))
+load(paste0(paste0(working_dir_path, "/saved_computations/"),"persistence_landscapes2.RData"))
+
+permutation_test_for_PLs(PLs1, PLs2)
+```
+
