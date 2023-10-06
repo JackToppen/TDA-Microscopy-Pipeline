@@ -76,12 +76,12 @@ get_thresholds <- function(percentile, paths) {
 }
 
 
-discretize <- function(path, disc_path, thresholds) {
+identify <- function(path, iden_path, thresholds) {
   # get number of channels
   channels <- length(paths)
   
-  # make output directory for discretized CSVs
-  make_dir(disc_path)
+  # make output directory for CSVs with identified cells
+  make_dir(iden_path)
   
   # get list of normalized segmentation CSVs to discretize
   files <- list.files(path, pattern="\\.csv$", include.dirs=TRUE, recursive=TRUE)
@@ -109,30 +109,30 @@ discretize <- function(path, disc_path, thresholds) {
     }
     
     # get path to new CSV and make directory for it
-    disc_file <- concat_path(disc_path, file)
-    make_dir(dirname(disc_file))
+    iden_file <- concat_path(iden_path, file)
+    make_dir(dirname(iden_file))
     
     # save the CSV file with Boolean string cell type
-    write.csv(df, disc_file, row.names=FALSE)
+    write.csv(df, iden_file, row.names=FALSE)
   }
 }
 
 
-generate_images <- function(disc_path, image_path, colors_csv, size, outline, resolution) {
+generate_images <- function(iden_path, image_path, colors_csv, size, outline, resolution) {
   # make output directory for images
   make_dir(image_path)
   
   # read the cell colors CSV to a data frame
   cell_colors <- read.csv(colors_csv)
 
-  # get list of discretized CSVs to image
-  files <- list.files(disc_path, pattern="\\.csv$", include.dirs=TRUE, recursive=TRUE)
+  # get list of CSVs with identified cells to image
+  files <- list.files(iden_path, pattern="\\.csv$", include.dirs=TRUE, recursive=TRUE)
   
   # iterate through all files
   for (file in files) {
-    # read the discretized CSV to a data frame
-    disc_file <- concat_path(disc_path, file)
-    df <- read.csv(disc_file)
+    # read the CSV to a data frame
+    iden_file <- concat_path(iden_path, file)
+    df <- read.csv(iden_file)
     
     # create a column in the data frame for cell colors
     df["color"] <- NA
