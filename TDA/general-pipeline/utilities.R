@@ -76,7 +76,7 @@ compute_PDs <- function(csv_files_path, group_name, save_location, types, index 
   
   #save persistence diagrams
   save(PDs, file=concat_path(path, paste0(group_name,"_PDs.RData")))
-  print(sprintf("Persistence diagrams are saved in %s", concat_path(path, paste0(group_name,"_PDs.RData"))))
+  print(sprintf("Persistence diagrams are saved in %s", sub(normalizePath("~"), "~", concat_path(path, paste0(group_name,"_PDs.RData")))))
 }
 
 
@@ -88,7 +88,7 @@ plot_PDs <- function(group_name, birth, death, save_location, save_plot){
   PD_list <- get(load(concat_path(path, paste0(group_name, "_PDs.RData"))))
   
   if (save_plot){
-    print(sprintf("Persistence diagrams plots are saved in %s", path))
+    print(sprintf("Persistence diagrams plots are saved in %s", sub(normalizePath("~"), "~", path)))
   }
   
   par(pty="s")
@@ -149,7 +149,7 @@ plot_representative_cycles <- function(csv_files_path, cell_types, threshold, gr
   }
   
   if (save_plot){
-    print(sprintf("Representative cycle are saved in %s", path))
+    print(sprintf("Representative cycle are saved in %s", sub(normalizePath("~"), "~", path)))
   }
 }
 
@@ -160,7 +160,7 @@ compute_PLs <- function(group_name, birth, death, discr_step, save_location, sav
   #location of saved PLs
   path <- concat_path(save_location, group_name)
   
-  print(sprintf("Persistence landscapes are saved in %s", concat_path(path, paste0(group_name,"_PLs.RData"))))
+  print(sprintf("Persistence landscapes are saved in %s", sub(normalizePath("~"), "~", concat_path(path, paste0(group_name,"_PLs.RData")))))
   
   PD_list <- get(load(concat_path(path, paste0(group_name, "_PDs.RData"))))
   
@@ -194,7 +194,7 @@ plot_PLs <- function(group_name, birth, death, discr_step, save_location, save_p
   path <- concat_path(save_location, group_name)
   
   if (save_plot){
-    print(sprintf("Persistence landscape plots are saved in %s", concat_path(path, group_name)))
+    print(sprintf("Persistence landscape plots are saved in %s", sub(normalizePath("~"), "~", concat_path(path, group_name))))
   }
   
   PL_list <- get(load(concat_path(path, paste0(group_name, "_PLs.RData"))))
@@ -258,7 +258,7 @@ compute_avgPL <- function(group_name, birth, death, discr_step, save_location){
   #location of saved PLs
   path <- concat_path(save_location, group_name)
   
-  print(sprintf("Average persistence landscape is saved in %s", concat_path(path, paste0(group_name,"_avgPL.RData"))))
+  print(sprintf("Average persistence landscape is saved in %s", sub(normalizePath("~"), "~", concat_path(path, paste0(group_name,"_avgPL.RData")))))
   
   PL_list <- get(load(concat_path(path, paste0(group_name, "_PLs.RData"))))
   
@@ -280,7 +280,7 @@ plot_avgPL <- function(group_name, birth, death, discr_step, save_location, save
   average_PL_vector <- get(load(concat_path(path, paste0(group_name, "_avgPL.RData"))))
   
   if (save_plot){
-    print(sprintf("Average persistence landscape plot is saved in %s", path))
+    print(sprintf("Average persistence landscape plot is saved in %s", sub(normalizePath("~"), "~", path)))
   }
   
   par(pty="s")
@@ -311,7 +311,7 @@ plot_avgPL <- function(group_name, birth, death, discr_step, save_location, save
 plot_avgPLs_difference <- function(groups, birth, death, discr_step, save_location, save_plot){
   
   if (save_plot){
-    print(sprintf("Plot of the difference of two average persistence landscapes is saved in %s", save_location))
+    print(sprintf("Plot of the difference of two average persistence landscapes is saved in %s", sub(normalizePath("~"), "~", save_location)))
   }
   
   #location of the saved first average PL
@@ -385,11 +385,9 @@ permutation_test_for_PLs <- function(groups, save_location, nrepeats){
   }
   
   #compute p-value
+  #Note that p-value can be 0 if not all possible permutations are considered
   p_value <- ngreater_distances/nrepeats
-  if (p_value == 0){
-    p_value <- 1/nrepeats #include a permutation that gives an observed value
-  }
   
-  return(print(sprintf("p-value %.4f:", p_value)))
+  return(print(sprintf("p-value %.4f", p_value)))
 }
 
