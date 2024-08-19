@@ -47,7 +47,7 @@ for (i in 1:length(groups)){
 ```
 
 ### Create a single csv file for storing necessary parameters (max birth and max death) obtained from all data groups
-*You only need to run this block once*
+*You only need to run this block once; after running it once comment it out*
 
 ```{r parameters-file}
 max_values <- data.frame(matrix(ncol = 2, nrow = 0))
@@ -60,7 +60,7 @@ write.csv(max_values, concat_path(saved_computations,"max-values.csv"), row.name
 
 ```{r cell-types}
 #specify location path of the file with the cell type codes and their colors
-cell_types_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Discretization/cell_colors.csv"
+cell_types_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Identification/cell_colors.csv"
 
 #read all cell type codes from your designated file
 cell_types_file <- read.csv(cell_types_path)
@@ -92,10 +92,10 @@ compute_PDs(csv_dir_path, group, saved_computations, cell_types, index)
 ```
 
 ## III. Determine the max birth and max death among all data files
-*This is needed to generate plots in both data groups with the same scale*
+*This is crucial for VI block and will ensure that all plots from both groups have the same scale*
 
 ```{r parameters}
-#If you want to generate plots in both data groups with the same scale, then before running this block, compute persistence diagrams for all data groups (i.e choose another data group and specify its location in I-block, and compute its persistence diagrams in II-block) 
+#Before running this block, compute persistence diagrams for all data groups (i.e choose another data group and specify its location in I-block, and compute its persistence diagrams in II-block) 
 
 max_values <- read.csv(concat_path(saved_computations, "max-values.csv"))
 
@@ -130,7 +130,7 @@ plot_representative_cycles(csv_dir_path, cell_types, persist_threshold, group, s
 #choose a discretization step (use the same for all groups)
 discr_step <- 0.3
 
-save_computations_csv <- TRUE #set TRUE if additionally to saving persistence landscapes in RData format you want to save each of them in a separate csv file. This option is provided if, for example, you plan to use persistence landscapes for further analysis in another programming language. Note that in a csv file row k corresponds to a persistence landscape function at depth k, where depth 1 corresponds to a outermost persistence landscape function, and column names correspond to x-values. 
+save_computations_csv <- FALSE #set TRUE if additionally to saving persistence landscapes in RData format you want to save each of them in a separate csv file. This option is provided if, for example, you plan to use persistence landscapes for further analysis in another programming language. Note that in a csv file row k corresponds to a persistence landscape function at depth k, where depth 1 corresponds to a outermost persistence landscape function, and column names correspond to x-values. 
 
 compute_PLs(group, max_birth, max_death, discr_step, saved_computations, save_computations_csv)
 ```
@@ -163,12 +163,13 @@ plot_avgPL(group, max_birth, max_death, discr_step, saved_computations, save_plo
 -----------------
 
 ## VI. Plot the difference of average persistence landscapes of two data groups
-*You need to have computed average persistence landscapes for both groups*
+*You need to have computed average persistence landscapes for both groups (make sure that they were plotted on the same scale)*
 
 ```{r difference-plot}
 save_plot <- TRUE #set FALSE if you don't want to save plots
 
-plot_avgPLs_difference(groups, max_birth, max_death, discr_step, saved_computations, save_plot)
+#avgPL of groups[0] - avgPL of groups[1]
+plot_avgPLs_difference(groups, max_birth, max_death, discr_step, saved_computations, save_plot) 
 ```
 
 ## VII. Perform a permutation test on persistence landscapes from two data groups
