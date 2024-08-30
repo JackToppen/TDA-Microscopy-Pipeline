@@ -44,7 +44,7 @@ def segmentation(image):
     segmentation_tile_size = 101
     substract_background = 0
 
-    # generate thresholds for masks
+    # generate thresholds for masks, using large adaptive filters
     dapi_thresh = threshold_local(image, 3501)
     seg_thresh = threshold_local(image, segmentation_tile_size, offset=substract_background)
 
@@ -55,7 +55,7 @@ def segmentation(image):
     # take element-wise AND of the two masks
     mask = dapi_mask&seg_mask
 
-    # get coordinates of local max signal
+    # get coordinates from distance transform
     distance = gaussian(ndimage.distance_transform_edt(mask), sigma=blur_radius)
     local_max_coords = peak_local_max(distance, exclude_border=False, labels=mask)
 
@@ -63,7 +63,7 @@ def segmentation(image):
     local_max_mask = np.zeros(distance.shape, dtype=bool)
     local_max_mask[tuple(local_max_coords.T)] = True
 
-    # find individual cells
+    # separate nearby cells with watershed
     markers = label(local_max_mask)
     nuclei_labels = watershed(-distance, markers, mask=mask)
     cytoprops = regionprops(nuclei_labels)
