@@ -44,8 +44,34 @@ An example CSV and image following proper cell type identification of the Exampl
 
 
 ## 3. Topological Data Analysis (TDA) - R
-There are two R folders within this section. `general_pipeline` folder should
-be used for the example dataset and for the most applications of the pipeline. The file `general_pipeline.Rmd` is designed to analyse two discretized microscopy data groups one at a time and in the end compare their tda outputs. Note that different stages of the analysis in the file are splitted into separate blocks. After specifying location of CSV files of a discretized microscopy data group, choose which cell types to use for computations. Next, for each image, the persistence diagram is generated and then plotted. The representative cycles of detected holes in multicellular patterns are also plotted. Later, using persistence diagram computations, the persistence landscapes are generated and then ploted. Furthermore, for each data group, the average persistence landscape is produced and plotted. After persistence diagrams, persistence landscapes, and average persistence landscapes are computed for both data groups, the difference of two average persistence landscapes is plotted. Also, the permutation test is performed on the persistence landscapes of the two data groups, and the p-value is calculated. Lastly, in `general_pipeline.html` some of the outputs for the example dataset are shown.    
+This module contains two R folders: `general_pipeline` and `hipsc_pipeline`.
 
-The second folder `hipsc_pipeline` was configured specifically to the complete dataset used within the *Hartsock
-et al 2023* manuscript. It requires installing [tda-tools](https://github.com/jjbouza/tda-tools) by Jose Bouza. Besides TDA analysis, this notebook also contains machine learning and statistical hypothesis testing computations. Note that you can also use `general_pipeline` for the discretized complete dataset but you need to slice images into smaller patches first with `slicer.py`. 
+1) `general_pipeline`
+   
+   This folder should be used for the example dataset and for the most applications of the pipeline. The file `general_pipeline.Rmd` is designed to analyse two discretized microscopy data groups, one at a time, and in     the end compare their tda outputs. Different stages of the analysis are separated into distinct code blocks.
+
+   - **If using our cell type indentification method:** After specifying location of CSV files of a discretized microscopy data group, choose which cell types to use for computations.
+   - **If using different cell type identification method:** Ensure that (x, y) coordinates of cells of different cell types are saved in different CSV files. The TDA analysis can then be applied to the entire CSV file      of each specific cell type.
+
+   For each image, the pipeline:
+
+   - Generates and plots the persistence diagram.
+   - Plots representative cycles of detected holes in multicellular patterns.
+   - Computes the persistence landscape based on the persistence diagram, and plots it (there is an option to save persistence landscapes in CSV files, to facilitate further analysis and reuse).
+     
+   Then, for each data group, the pipeline produces and plots the average persistence landscape.
+
+   After the average persistence landscapes are computed for both data groups, the difference of two average persistence landscapes is plotted.
+
+   Lastly, the permutation test is performed on the persistence landscapes of the two data groups, and the p-value is calculated.
+
+   Sample outputs for the example dataset can be viewed in `general_pipeline.html`.    
+
+   **Note:** All plots have an option to be saved automatically, enabling to retain visual results for each analysis. 
+   
+3) `hipsc_pipeline`
+
+   This folder was configured specifically to the complete dataset used within the *Hartsock
+   et al 2023* manuscript. It requires installing [tda-tools](https://github.com/jjbouza/tda-tools) by Jose Bouza. Besides TDA analysis, `hipsc_pipeline.Rmd` also contains machine learning and statistical hypothesis       testing computations.
+
+   **Note:** `general_pipeline` can be used for the discretized complete dataset, but first, images need to be sliced into smaller patches with `slicer.py`. 
