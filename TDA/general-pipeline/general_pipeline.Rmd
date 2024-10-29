@@ -8,7 +8,7 @@ output:
 *Install the following libraries before running the TDA pipeline.*
 
 ```{r}
-#install.packages(c("TDA", "Matrix"))
+install.packages(c("TDA", "Matrix"))
 ```
 ---------------------------
 
@@ -50,10 +50,10 @@ for (i in 1:length(groups)){
 *You only need to run this block once; after running it once comment it out*
 
 ```{r parameters-file}
-#max_values <- data.frame(matrix(ncol = 2, nrow = 0))
-#colnames(max_values) <- c("maxbirth", "maxdeath")  
+max_values <- data.frame(matrix(ncol = 2, nrow = 0))
+colnames(max_values) <- c("maxbirth", "maxdeath")  
 
-#write.csv(max_values, concat_path(saved_computations,"max-values.csv"), row.names=FALSE)
+write.csv(max_values, concat_path(saved_computations,"max-values.csv"), row.names=FALSE)
 ```
 
 ## I. Are you using our cell type identification method?
