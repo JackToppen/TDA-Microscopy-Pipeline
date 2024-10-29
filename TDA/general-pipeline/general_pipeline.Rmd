@@ -8,7 +8,7 @@ output:
 *Install the following libraries before running the TDA pipeline.*
 
 ```{r}
-install.packages(c("TDA", "Matrix"))
+#install.packages(c("TDA", "Matrix"))
 ```
 ---------------------------
 
@@ -50,52 +50,68 @@ for (i in 1:length(groups)){
 *You only need to run this block once; after running it once comment it out*
 
 ```{r parameters-file}
-max_values <- data.frame(matrix(ncol = 2, nrow = 0))
-colnames(max_values) <- c("maxbirth", "maxdeath")  
+#max_values <- data.frame(matrix(ncol = 2, nrow = 0))
+#colnames(max_values) <- c("maxbirth", "maxdeath")  
 
-write.csv(max_values, concat_path(saved_computations,"max-values.csv"), row.names=FALSE)
+#write.csv(max_values, concat_path(saved_computations,"max-values.csv"), row.names=FALSE)
 ```
 
-### Choose cell types
+## I. Are you using our cell type identification method?
+*If you are using different cell type identification method, have separate csv files for cells of distinct types*
 
 ```{r cell-types}
-#specify location path of the file with the cell type codes and their colors
-cell_types_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Identification/cell_colors.csv"
+#set 'yes' if you use our cell type identification method;
+#set 'no' if you use different cell type identification method; in this case, have separate csv files for cells of distinct types
 
-#read all cell type codes from your designated file
-cell_types_file <- read.csv(cell_types_path)
-all_cell_types <- cell_types_file$Code
+our_cell_type_identification <- "yes"
 
-# indicate cell types for only including specific cells 
-cell_types <- all_cell_types[2]   # this can either be a single value or a vector
+if (our_cell_type_identification == "yes"){
+  #specify location path of the file with the cell type codes and their colors
+  cell_types_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Identification/cell_colors.csv"
 
-index <- NaN    # default index for cell types is the last column
+  #read all cell type codes from your designated file
+  cell_types_file <- read.csv(cell_types_path)
+  all_cell_types <- cell_types_file$Code
 
-sprintf("Cell types used: %s", paste(cell_types, collapse=", "))
+  # indicate cell types for only including specific cells 
+  cell_types <- all_cell_types[2]   # this can either be a single value or a vector
+
+  index <- NaN    # default index for cell types is the last column
+
+  sprintf("Analysis will be done for cells of type: %s", paste(cell_types, collapse=", "))
+}
+
+#this will include all cells
+if (our_cell_type_identification == "no"){
+  print("You are using a different cell type identification method. Analysis will be done for all cells.")
+  cell_types <- NaN 
+  index <- NaN
+}
+
 ```
 
-## I. Choose a data group and its location
+## II. Choose a data group and its location
 
 ```{r data-groups}
 #choose a group folder where to save computations
-group <- "group_0"
+group <- "group_25"
 
 # specify location path of the csv files of that group
-csv_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Discretized-images/0"
+csv_dir_path <- "~/Documents/GitHub/TDA-Microscopy-Pipeline/Discretized-images/25"
 ```
 
-## II. Compute persistence diagrams and save them
+## III. Compute persistence diagrams and save them
 *We use Delaunay complex filtration to compute persistence diagrams*
 
 ```{r PDs}
 compute_PDs(csv_dir_path, group, saved_computations, cell_types, index)
 ```
 
-## III. Determine the max birth and max death among all data files
-*This is crucial for VI block and will ensure that all plots from both groups have the same scale*
+## IV. Determine the max birth and max death among all data files
+*This is crucial for VII block and will ensure that all plots from both groups have the same scale*
 
 ```{r parameters}
-#Before running this block, compute persistence diagrams for all data groups (i.e choose another data group and specify its location in I-block, and compute its persistence diagrams in II-block) 
+#Before running this block, compute persistence diagrams for all data groups (i.e choose another data group and specify its location in II-block, and compute its persistence diagrams in III-block) 
 
 max_values <- read.csv(concat_path(saved_computations, "max-values.csv"))
 
@@ -123,7 +139,7 @@ save_plot <- TRUE #set FALSE if you don't want to save plots
 plot_representative_cycles(csv_dir_path, cell_types, persist_threshold, group, saved_computations, save_plot)
 ```
 
-## IV. Compute persistence landscapes and save them
+## V. Compute persistence landscapes and save them
 *You need to have persistence diagrams computed first*
 
 ```{r PLs}
@@ -143,7 +159,7 @@ save_plot <- TRUE #set FALSE if you don't want to save plots
 plot_PLs(group, max_birth, max_death, discr_step, saved_computations, save_plot)
 ```
 
-## V. Compute the average persistence landscape and save it
+## VI. Compute the average persistence landscape and save it
 *You need to have persistence landscapes computed first*
 
 ```{r average-PLs}
@@ -162,17 +178,17 @@ plot_avgPL(group, max_birth, max_death, discr_step, saved_computations, save_plo
 
 -----------------
 
-## VI. Plot the difference of average persistence landscapes of two data groups
+## VII. Plot the difference of average persistence landscapes of two data groups
 *You need to have computed average persistence landscapes for both groups (make sure that they were plotted on the same scale)*
 
 ```{r difference-plot}
 save_plot <- TRUE #set FALSE if you don't want to save plots
 
-#avgPL of groups[0] - avgPL of groups[1]
+#avgPL of groups[0] minus avgPL of groups[1]
 plot_avgPLs_difference(groups, max_birth, max_death, discr_step, saved_computations, save_plot) 
 ```
 
-## VII. Perform a permutation test on persistence landscapes from two data groups
+## VIII. Perform a permutation test on persistence landscapes from two data groups
 *You need to have computed persistence landscapes for both groups*
 
 ```{r permutation-test}
