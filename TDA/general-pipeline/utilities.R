@@ -51,8 +51,6 @@ compute_PDs <- function(csv_files_path, group_name, save_location, types, index 
       } else {
         cells <- cells[cells[,index] == types,]    # if a single value
       }
-    } else if (is.nan(types)){
-      cells <- cells
     }
     
     #compute persistence homology using Delaunay complex filtration (also known as Alpha complex filtration)
@@ -109,7 +107,7 @@ plot_PDs <- function(group_name, birth, death, save_location, save_plot){
 
 
 #plot representative cycles that persist (live) over a certain threshold
-plot_representative_cycles <- function(csv_files_path, types, threshold, group_name, save_location, save_plot){
+plot_representative_cycles <- function(csv_files_path, cell_types, threshold, group_name, save_location, save_plot){
   
   # recursively find CSV files within directory and return file-names in a list
   data_files <- get_csvs(csv_dir_path)
@@ -122,13 +120,7 @@ plot_representative_cycles <- function(csv_files_path, types, threshold, group_n
     print(sprintf("Processing file %s", data_files[i]))
     file_path <- concat_path(csv_files_path, data_files[i])
     cells <- read.csv(file_path)
-    
-    if (is.nan(types)){
-      cells <- cells
-    } else {
-      cells <- cells[which(is.element(cells[,8], types)),]
-    }
-    
+    cells <- cells[which(is.element(cells[,8], cell_types)),]
     #compute persistence homology using Delaunay complex filtration (also known as Alpha complex filtration)
     filtration <- alphaComplexFiltration(cells[,1:2], printProgress = TRUE)
     PH <-  alphaComplexDiag(cells[,1:2], maxdimension = 1, library = c("GUDHI", "Dionysus"), location = TRUE)
