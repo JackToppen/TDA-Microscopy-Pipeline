@@ -7,7 +7,7 @@ Two datasets and an example from *Hartsock et al 2024* manuscript can be found o
 
 Provided script `slicer.py` can divide larger microscopy images, as was done in *Hartsock et al 2024* manuscript, into smaller patches. This is how the "Example" dateset was generated. For our pipeline, we suggest using images/patches of size at most 1000x1000 pixels.
 
-## 1. Segmentation (Python)
+## 1 - Segmentation (Python)
 This module has been adapted from *[Nikitina et al 2020](https://doi.org/10.1021/jasms.9b00094)* to interface with the subsequent modules of the pipeline. Once downloaded locally, the locations of the microscopy image files should be updated, and some of the configuration parameters may need to be changed.
 
 Please install the necessary Python dependencies for this module.
@@ -33,7 +33,7 @@ This segmentation module generates individual cell positions, in the form of cen
 Example output file: `sample_image_segment.csv` following proper segmentation of the Example dataset, is provided as well.
 
 
-## 2. (Cell type) Identification (R)
+## 2 - (Cell type) Identification (R)
 Similar to the Segmentation module, please update local paths to the segmentation outputs from above.
 
 The `cell_colors.csv` file is necessary to specify how cell types are visualized in the pseudo-microscopy images. Binary strings encode low (0) or high (1) discretized signals of one or more markers from the segmented microscopy images. The mapping from binary string to cell type color should follow the order of the measured signals from left to right in the segmentation CSVs as shown in the example header above.
@@ -47,7 +47,7 @@ Several cell identification methods (e.g. [CellSighter](https://doi.org/10.1038/
 
 An example CSV and image following proper cell type identification of the Example dataset, is provided in the module.
 
-## 3. Topological Data Analysis (TDA) (R)
+## 3 - Topological Data Analysis (TDA) (R)
 This module contains two R folders: `general_pipeline` and `hipsc_pipeline`.
 
 1) `general_pipeline`
