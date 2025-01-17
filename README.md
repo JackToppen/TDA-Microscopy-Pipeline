@@ -30,7 +30,7 @@ This segmentation module generates individual cell positions, in the form of cen
 | X coord | Y coord | nuclear marker | marker #1 | marker #2 | ... |
 ```
 
-An example CSV following proper segmentation of the Example dataset, is provided as well.
+Example output file: `sample_image_segment.csv` following proper segmentation of the Example dataset, is provided as well.
 
 
 ## 2. (Cell type) Identification (R)
