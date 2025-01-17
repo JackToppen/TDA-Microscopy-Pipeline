@@ -34,6 +34,9 @@ Example output file: `sample_image_segment.csv` following proper segmentation of
 
 
 ## 2 - (Cell type) Identification (R)
+<p align="center">
+    <img src="https://github.com/JackToppen/TDA-Microscopy-Pipeline/2-Identification/sample_image_identified.png?raw=true" alt="" width="300">
+<p>
 Similar to the Segmentation module, please update local paths to the segmentation outputs from above.
 
 The `cell_colors.csv` file is necessary to specify how cell types are visualized in the pseudo-microscopy images. Binary strings encode low (0) or high (1) discretized signals of one or more markers from the segmented microscopy images. The mapping from binary string to cell type color should follow the order of the measured signals from left to right in the segmentation CSVs as shown in the example header above.
