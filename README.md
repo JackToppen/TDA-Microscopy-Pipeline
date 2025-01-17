@@ -8,6 +8,9 @@ Two datasets and an example from *Hartsock et al 2024* manuscript can be found o
 Provided script `slicer.py` can divide larger microscopy images, as was done in *Hartsock et al 2024* manuscript, into smaller patches. This is how the "Example" dateset was generated. For our pipeline, we suggest using images/patches of size at most 1000x1000 pixels.
 
 ## 1 - Segmentation (Python)
+<p align="center">
+    <img src="https://github.com/JackToppen/TDA-Microscopy-Pipeline/blob/main/1-Segmentation/sample_image.png?raw=true" alt="" width="350">
+<p>
 This module has been adapted from *[Nikitina et al 2020](https://doi.org/10.1021/jasms.9b00094)* to interface with the subsequent modules of the pipeline. Once downloaded locally, the locations of the microscopy image files should be updated, and some of the configuration parameters may need to be changed.
 
 Please install the necessary Python dependencies for this module.
@@ -35,7 +38,7 @@ Example output file: `sample_image_segment.csv` following proper segmentation of
 
 ## 2 - (Cell type) Identification (R)
 <p align="center">
-    <img src="https://github.com/JackToppen/TDA-Microscopy-Pipeline/2-Identification/sample_image_identified.png?raw=true" alt="" width="300">
+    <img src="https://github.com/JackToppen/TDA-Microscopy-Pipeline/blob/main/2-Identification/sample_image_identified.png?raw=true" alt="" width="350">
 <p>
 Similar to the Segmentation module, please update local paths to the segmentation outputs from above.
 
